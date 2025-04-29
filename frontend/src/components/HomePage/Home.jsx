@@ -15,30 +15,30 @@ const Home = () => {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
-  
+
 
   const navigate = useNavigate();
 
 
-    // Mock authentication check
-    useEffect(() => {
-      const user = localStorage.getItem("username");
-      if (user) {
-        setIsLoggedIn(true);
-        setUsername(user);
-      }
-      console.log(user)
-    }, []);
-  
-    // Logout handler
-    const handleLogout = () => {
-      localStorage.removeItem("username");
-      setIsLoggedIn(false);
-      setUsername(null);
-      navigate("/login"); // Redirect to login page
-    };
+  // Mock authentication check
+  useEffect(() => {
+    const user = localStorage.getItem("username");
+    if (user) {
+      setIsLoggedIn(true);
+      setUsername(user);
+    }
+    console.log(user)
+  }, []);
 
-     // Slideshow state and functionality
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    setIsLoggedIn(false);
+    setUsername(null);
+    navigate("/login"); // Redirect to login page
+  };
+
+  // Slideshow state and functionality
   const [activeSlide, setActiveSlide] = useState(0);
   const slides = [
     {
@@ -228,7 +228,7 @@ const Home = () => {
               {/* Arrow Link to Other Pages */}
               <div className="mt-6">
                 <button
-                  onClick={() => (window.location.href = "/learningPlanSharing")}
+                  onClick={() => (window.location.href = "/learningPlanSharingFeed")}
                   className="flex items-center bg-blue-900 text-white text-xl font-semibold rounded-3xl p-3"
                   disabled={!isLoggedIn}
                 >
