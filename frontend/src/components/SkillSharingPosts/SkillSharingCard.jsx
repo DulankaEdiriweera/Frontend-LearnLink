@@ -49,9 +49,9 @@ const SkillSharingCard = ({ skill }) => {
       <div className="mt-4">
         {skill.imageUrl && (
           <img
-            src={skill.imageUrl}
+            src={`http://localhost:8080/${skill.imageUrl}`}
             alt="Post Media"
-            className="w-full h-auto object-cover rounded-lg"
+            className="w-2/3 h-auto object-cover rounded-lg"
           />
         )}
       </div>
