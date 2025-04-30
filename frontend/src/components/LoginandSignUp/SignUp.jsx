@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import Logo from "../../assets/Logo.png";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -24,11 +25,22 @@ const SignUp = () => {
       );
       // Checking if the response contains data and displaying success
       if (response.data) {
-        setMessage("Registration successful!");
-        navigate("/login"); // Navigate to login page after successful registration
+        Swal.fire({
+          icon: "success",
+          title: "Registration Successful",
+          text: "You will be redirected to login.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        setTimeout(() => navigate("/login"), 2000);
       }
     } catch (error) {
-      setMessage(error.response?.data || "Registration failed");
+      Swal.fire({
+        icon: "error",
+        title: "Registration Failed",
+        text: error.response?.data || "Something went wrong",
+      });
     }
   };
 
