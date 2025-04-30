@@ -130,6 +130,13 @@ const SkillSharingFeed = () => {
 
   const userSkills = skills.filter((skill) => skill.user?.email !== email);
 
+
+// Optional: If you also have user ID and username saved
+const currentUser = {
+  email: email,
+};
+
+
   return (
     <div className="flex">
       <div className="mr-2">
@@ -218,7 +225,7 @@ const SkillSharingFeed = () => {
         </div>
         <div className="pt-10 pr-10">
           {[...userSkills].reverse().map((skill) => (
-            <SkillSharingCard key={skill.id} skill={skill} />
+            <SkillSharingCard key={skill.id} skill={skill} currentUser={currentUser}/>
           ))}
         </div>
       </div>

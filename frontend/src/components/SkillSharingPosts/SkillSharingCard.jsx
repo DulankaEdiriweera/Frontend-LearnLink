@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaThumbsUp, FaComment } from "react-icons/fa";
+import axios from "axios";
+import Swal from "sweetalert2";
 
-const SkillSharingCard = ({ skill }) => {
+const SkillSharingCard = ({ skill, currentUser }) => {
   // State to keep track of like and comment counts
-  const [likes, setLikes] = useState(120);
+  const [likes, setLikes] = useState(skill.likedUsers?.length || 0);
   const [comments, setComments] = useState(45);
 
   // State to track if the logged-in user has liked or commented
@@ -12,14 +14,36 @@ const SkillSharingCard = ({ skill }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Handle like button click
-  const handleLike = () => {
-    if (userLiked) {
-      setLikes(likes - 1); // Decrease like count if the user has already liked
-    } else {
-      setLikes(likes + 1); // Increase like count if the user likes the post
+  useEffect(() => {
+    if (skill.likedUsers && currentUser) {
+      const liked = skill.likedUsers.some((u) => u.email === currentUser.email);
+      setUserLiked(liked);
     }
-    setUserLiked(!userLiked); // Toggle like state
+    console.log("likedUsers", skill.likedUsers);
+    console.log("currentUser", currentUser.email);
+  }, [skill.likedUsers, currentUser]);
+
+  // Handle like button click
+  const handleLike = async () => {
+    try {
+      const token = localStorage.getItem("token"); // or from context
+      const res = await axios.put(
+        `http://localhost:8080/api/skills/${skill.id}/like`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setLikes(res.data.likeCount);
+      setUserLiked(res.data.liked);
+      localStorage.setItem(
+        `liked_skill_${skill.id}`,
+        res.data.liked ? "true" : "false"
+      );
+    } catch (error) {
+      Swal.fire("Error", "Failed to update like", "error");
+    }
   };
 
   // Handle comment button click
@@ -32,13 +56,32 @@ const SkillSharingCard = ({ skill }) => {
     setUserCommented(!userCommented); // Toggle comment state
   };
 
-
   const handleImagePreview = () => {
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const fetchLikedUsers = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/skills/${skill.id}/liked-users`
+      );
+      console.log("Liked Users:", res.data);
+      Swal.fire({
+        title: `<div style="font-size: 24px;">👍 Liked by</div>`,
+        html: `<div style="text-align: left;">
+                ${res.data
+                  .map((u) => `<p>${u.username} (${u.email})</p>`)
+                  .join("")}
+              </div>`,
+        icon: "info",
+      });
+    } catch (err) {
+      Swal.fire("Error", "Failed to load liked users", "error");
+    }
   };
 
   return (
@@ -80,14 +123,24 @@ const SkillSharingCard = ({ skill }) => {
       {/* Like and Comment Icons with Counts */}
       <div className="flex justify-between items-center mt-4">
         {/* Like Button */}
-        <div
-          className={`flex items-center cursor-pointer ${
-            userLiked ? "text-blue-500" : "text-gray-500"
-          }`}
-          onClick={handleLike}
-        >
-          <FaThumbsUp className="mr-2 text-2xl" />
-          <span>{likes}</span>
+        <div className="flex">
+          <div
+            className={`flex items-center cursor-pointer ${
+              userLiked ? "text-blue-500" : "text-gray-500"
+            }`}
+            onClick={handleLike}
+          >
+            <FaThumbsUp className="mr-2 text-2xl" />
+            <span>{likes}</span>
+          </div>
+          <div className="items-center">
+            <button
+              className="text-sm text-blue-500 ml-2"
+              onClick={fetchLikedUsers}
+            >
+              View Likes
+            </button>
+          </div>
         </div>
 
         {/* Comment Button */}
