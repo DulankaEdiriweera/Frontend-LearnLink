@@ -133,7 +133,7 @@ const Home = () => {
               </>
             ) : (
               <>
-                <span className="text-xl font-semibold">{username}</span>
+                <span className="text-xl font-semibold">Hello!, {username}</span>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
