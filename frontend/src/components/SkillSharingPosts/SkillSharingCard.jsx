@@ -10,6 +10,8 @@ const SkillSharingCard = ({ skill }) => {
   const [userLiked, setUserLiked] = useState(false); // Change to true if user liked
   const [userCommented, setUserCommented] = useState(false); // Change to true if user commented
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Handle like button click
   const handleLike = () => {
     if (userLiked) {
@@ -28,6 +30,15 @@ const SkillSharingCard = ({ skill }) => {
       setComments(comments + 1); // Increase comment count if the user comments
     }
     setUserCommented(!userCommented); // Toggle comment state
+  };
+
+
+  const handleImagePreview = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -59,7 +70,9 @@ const SkillSharingCard = ({ skill }) => {
           <img
             src={`http://localhost:8080/${skill.imageUrl}`}
             alt="Skill"
+            className="cursor-pointer"
             style={{ maxWidth: "80%", height: "auto" }}
+            onClick={handleImagePreview}
           />
         )}
       </div>
@@ -88,6 +101,24 @@ const SkillSharingCard = ({ skill }) => {
           <span>{comments}</span>
         </div>
       </div>
+      {/* Modal Preview for Images Only */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white p-4 rounded shadow-lg max-w-screen-xl max-h-screen overflow-auto"
+            onClick={(e) => e.stopPropagation()} // Prevent closing modal on click inside
+          >
+            <img
+              src={`http://localhost:8080/${skill.imageUrl}`}
+              alt="Skill Preview"
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
