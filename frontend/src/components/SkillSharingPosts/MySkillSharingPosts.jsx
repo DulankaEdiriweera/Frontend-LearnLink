@@ -36,10 +36,16 @@ const MySkillSharingPosts = () => {
   const userSkills = skills.filter(skill => skill.user?.email === email);
 
 
+  //delete a post
+  const handleDeleteSkill = (id) => {
+    setSkills((prevSkills) => prevSkills.filter((skill) => skill.id !== id));
+  };
+  
+
   return <div>
     <div className="pt-10 pr-10">
           {userSkills.map((skill) => (
-            <MySkillingSharingCard key={skill.id} skill={skill} />
+            <MySkillingSharingCard key={skill.id} skill={skill} onDelete={handleDeleteSkill}/>
           ))}
         </div>
   </div>;

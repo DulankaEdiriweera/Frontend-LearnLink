@@ -1,89 +1,121 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 import { FaThumbsUp, FaComment } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
+import { MdEdit } from "react-icons/md";
+import axios from "axios";
 
-const MySkillingSharingCard = ({ skill }) => {
-    // State to keep track of like and comment counts
-      const [likes, setLikes] = useState(120);
-      const [comments, setComments] = useState(45);
-    
-      // State to track if the logged-in user has liked or commented
-      const [userLiked, setUserLiked] = useState(false); // Change to true if user liked
-      const [userCommented, setUserCommented] = useState(false); // Change to true if user commented
-    
-      // Handle like button click
-      const handleLike = () => {
-        if (userLiked) {
-          setLikes(likes - 1); // Decrease like count if the user has already liked
-        } else {
-          setLikes(likes + 1); // Increase like count if the user likes the post
-        }
-        setUserLiked(!userLiked); // Toggle like state
-      };
-    
-      // Handle comment button click
-      const handleComment = () => {
-        if (userCommented) {
-          setComments(comments - 1); // Decrease comment count if the user has already commented
-        } else {
-          setComments(comments + 1); // Increase comment count if the user comments
-        }
-        setUserCommented(!userCommented); // Toggle comment state
-      };
+const MySkillingSharingCard = ({ skill, onDelete }) => {
+  // State to keep track of like and comment counts
+  const [likes, setLikes] = useState(120);
+  const [comments, setComments] = useState(45);
+
+  // State to track if the logged-in user has liked or commented
+  const [userLiked, setUserLiked] = useState(false); // Change to true if user liked
+  const [userCommented, setUserCommented] = useState(false); // Change to true if user commented
+
+  // Handle like button click
+  const handleLike = () => {
+    if (userLiked) {
+      setLikes(likes - 1); // Decrease like count if the user has already liked
+    } else {
+      setLikes(likes + 1); // Increase like count if the user likes the post
+    }
+    setUserLiked(!userLiked); // Toggle like state
+  };
+
+  // Handle comment button click
+  const handleComment = () => {
+    if (userCommented) {
+      setComments(comments - 1); // Decrease comment count if the user has already commented
+    } else {
+      setComments(comments + 1); // Increase comment count if the user comments
+    }
+    setUserCommented(!userCommented); // Toggle comment state
+  };
+
+
+  //delete a post
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this skill?");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:8080/api/skills/${skill.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert("Skill deleted successfully");
+      onDelete(skill.id); // Notify parent to remove the deleted card
+    } catch (error) {
+      console.error("Error deleting skill:", error);
+      alert("Failed to delete skill");
+    }
+  };
+
   return (
-    
     <div>
       <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
-            {/* Post Owner */}
-            <div className="flex items-center mb-2">
-              <div className="font-semibold text-lg text-gray-800">{skill.user ? skill.user.username : 'Unknown User'}</div>
+        <div className="flex items-center justify-between mb-2 w-full">
+          <div className="font-semibold text-lg text-gray-800">
+            {skill.user ? skill.user.username : "Unknown User"}
+          </div>
+
+          <div className="flex space-x-4 text-2xl ml-auto">
+            <div className="cursor-pointer text-blue-600 flex items-center">
+              <MdEdit className="mr-1" />
             </div>
-      
-            {/* Post Title */}
-            <div className="text-xl font-semibold mb-2">{skill.title}</div>
-      
-            {/* Post Description */}
-            <p className="text-gray-700">
-            {skill.description}
-            </p>
-      
-            {/* Post Image or Video */}
-            <div className="mt-4">
-              {skill.imageUrl && (
-                <img
-                  src={`http://localhost:8080/${skill.imageUrl}`}
-                  alt="Post Media"
-                  className="w-2/3 h-auto object-cover rounded-lg"
-                />
-              )}
-            </div>
-      
-            {/* Like and Comment Icons with Counts */}
-            <div className="flex justify-between items-center mt-4">
-              {/* Like Button */}
-              <div
-                className={`flex items-center cursor-pointer ${
-                  userLiked ? "text-blue-500" : "text-gray-500"
-                }`}
-                onClick={handleLike}
-              >
-                <FaThumbsUp className="mr-2 text-2xl" />
-                <span>{likes}</span>
-              </div>
-      
-              {/* Comment Button */}
-              <div
-                className={`flex items-center cursor-pointer ${
-                  userCommented ? "text-blue-500" : "text-gray-500"
-                }`}
-                onClick={handleComment}
-              >
-                <FaComment className="mr-2 text-2xl" />
-                <span>{comments}</span>
-              </div>
+            <div onClick={handleDelete} className="cursor-pointer text-red-600 flex items-center">
+              <MdDeleteForever className="mr-1" />
             </div>
           </div>
-    </div>
-  )
-}
+        </div>
 
-export default MySkillingSharingCard
+        {/* Post Title */}
+        <div className="text-xl font-semibold mb-2">{skill.title}</div>
+
+        {/* Post Description */}
+        <p className="text-gray-700">{skill.description}</p>
+
+        {/* Post Image or Video */}
+        <div className="mt-4">
+          {skill.imageUrl && (
+            <img
+              src={`http://localhost:8080/${skill.imageUrl}`}
+              alt="Post Media"
+              className="w-2/3 h-auto object-cover rounded-lg"
+            />
+          )}
+        </div>
+
+        {/* Like and Comment Icons with Counts */}
+        <div className="flex justify-between items-center mt-4">
+          {/* Like Button */}
+          <div
+            className={`flex items-center cursor-pointer ${
+              userLiked ? "text-blue-500" : "text-gray-500"
+            }`}
+            onClick={handleLike}
+          >
+            <FaThumbsUp className="mr-2 text-2xl" />
+            <span>{likes}</span>
+          </div>
+
+          {/* Comment Button */}
+          <div
+            className={`flex items-center cursor-pointer ${
+              userCommented ? "text-blue-500" : "text-gray-500"
+            }`}
+            onClick={handleComment}
+          >
+            <FaComment className="mr-2 text-2xl" />
+            <span>{comments}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MySkillingSharingCard;
