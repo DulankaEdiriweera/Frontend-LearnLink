@@ -2,46 +2,53 @@ import React, { useEffect, useState } from "react";
 import Navigation from "../Navigation/Navigation.jsx";
 import SkillSharingCard from "./SkillSharingCard.jsx";
 import axios from "axios";
+import SkillSharingRightPart from "./SkillSharingRightPart.jsx";
+import Swal from "sweetalert2";
 
 const SkillSharingFeed = () => {
-
   const token = localStorage.getItem("token"); // Get the saved JWT token
-  
-  console.log(token)
+
+  console.log(token);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
-     
       if (!token) {
         alert("User not logged in");
         return;
       }
-  
-      // Prepare the request payload
-      const formDataToSend = {
-        title: formData.title,
-        description: formData.description,
-        imageUrl: preview || "", // send preview URL or empty
-      };
-  
-      // Send the POST request
+
+      // Prepare form data
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      if (formData.file) {
+        formDataToSend.append("file", formData.file);
+      }
+
       const response = await axios.post(
-        "http://localhost:8080/api/skills", // Your backend endpoint
+        "http://localhost:8080/api/skills",
         formDataToSend,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Attach the token
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-      
-  
+
       console.log("Post Created:", response.data);
-      alert("Post created successfully!");
-  
-      // Optional: Reset the form after successful submission
+      Swal.fire({
+        icon: "success",
+        title: "Post Created!",
+        text: "Your skill-sharing post has been successfully uploaded.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      
+
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -50,7 +57,11 @@ const SkillSharingFeed = () => {
       setPreview(null);
     } catch (error) {
       console.error("Error creating post:", error);
-      alert("Failed to create post");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data || "Failed to create post",
+      });
     }
   };
 
@@ -85,14 +96,19 @@ const SkillSharingFeed = () => {
     }
   };
 
-
   //get all skills
   const [skills, setSkills] = useState([]);
+  const email = localStorage.getItem("email");
+
   useEffect(() => {
     // Fetch the skills from the backend
     const fetchSkills = async () => {
       if (!token) {
-        alert("User not logged in");
+        Swal.fire({
+          icon: "warning",
+          title: "Not Logged In",
+          text: "Please log in to create a post.",
+        });
         return;
       }
 
@@ -112,6 +128,15 @@ const SkillSharingFeed = () => {
     fetchSkills();
   }, [token]);
 
+  const userSkills = skills.filter((skill) => skill.user?.email !== email);
+
+
+// Optional: If you also have user ID and username saved
+const currentUser = {
+  email: email,
+};
+
+
   return (
     <div className="flex">
       <div className="mr-2">
@@ -119,7 +144,10 @@ const SkillSharingFeed = () => {
       </div>
       <div className="h-screen bg-slate-100 p-4 flex-grow shadow-lg rounded-2xl mt-2 mb-2 ml-2 overflow-y-scroll scrollbar-hidden">
         <div>
-          <form onSubmit={handleSubmit} className="space-y-4 p-4 w-1/2 shadow-xl rounded-xl bg-white">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 p-4 w-1/2 shadow-xl rounded-xl bg-white"
+          >
             <h2 className="text-2xl font-semibold mb-4">Create a Post</h2>
             <div>
               <label htmlFor="title" className="block text-lg font-medium">
@@ -170,18 +198,22 @@ const SkillSharingFeed = () => {
               />
             </div>
             {/* Display the image/video preview */}
-          {preview && (
-            <div className="mt-4">
-              {formData.file && formData.file.type.startsWith("image") ? (
-                <img src={preview} alt="Selected Preview" className="w-1/2 h-1/2 rounded-lg" />
-              ) : formData.file && formData.file.type.startsWith("video") ? (
-                <video controls className="w-full h-auto rounded-lg">
-                  <source src={preview} type={formData.file.type} />
-                  Your browser does not support the video tag.
-                </video>
-              ) : null}
-            </div>
-          )}
+            {preview && (
+              <div className="mt-4">
+                {formData.file && formData.file.type.startsWith("image") ? (
+                  <img
+                    src={preview}
+                    alt="Selected Preview"
+                    className="w-1/2 h-1/2 rounded-lg"
+                  />
+                ) : formData.file && formData.file.type.startsWith("video") ? (
+                  <video controls className="w-full h-auto rounded-lg">
+                    <source src={preview} type={formData.file.type} />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : null}
+              </div>
+            )}
 
             <button
               type="submit"
@@ -192,11 +224,13 @@ const SkillSharingFeed = () => {
           </form>
         </div>
         <div className="pt-10 pr-10">
-          {skills.map((skill) => (
-            <SkillSharingCard key={skill.id} skill={skill} />
+          {[...userSkills].reverse().map((skill) => (
+            <SkillSharingCard key={skill.id} skill={skill} currentUser={currentUser}/>
           ))}
         </div>
-        
+      </div>
+      <div>
+        <SkillSharingRightPart/>
       </div>
     </div>
   );
