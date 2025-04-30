@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaRegUserCircle, FaCalendarAlt, FaArrowLeft } from "react-icons/fa";
 import { MdBusinessCenter, MdSchool } from "react-icons/md";
 import profileBackground from "../../assets/profilebackground.png";
+import MyLearningPlanPosts from "../LearningPlanSharing/MyLearningPlanPosts";
 
 const UserProfile = () => {
     const [tab, setTab] = useState("skillSharing");
@@ -91,7 +92,7 @@ const UserProfile = () => {
 
                 {/* Navigation Tabs */}
                 <div className="mt-8 flex space-x-6 border-b border-gray-200">
-                    {["skillSharing", "learningPlan", "goalTracking", "learningProgress"].map((item) => (
+                    {["skillSharing", "LearningPlan", "goalTracking", "learningProgress"].map((item) => (
                         <button
                             key={item}
                             onClick={() => handleTabChange(item)}
@@ -108,7 +109,7 @@ const UserProfile = () => {
                 {/* Tab Content */}
                 <div className="mt-6">
                     {tab === "skillSharing" && <div>Skill Sharing Content</div>}
-                    {tab === "learningPlan" && <div>Learning Plan Content</div>}
+                    {tab === "LearningPlan" && <div><MyLearningPlanPosts /></div>}
                     {tab === "goalTracking" && <div>Goal Tracking Content</div>}
                     {tab === "learningProgress" && <div>Learning Progress Content</div>}
                 </div>
