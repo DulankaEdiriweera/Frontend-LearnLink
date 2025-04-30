@@ -111,7 +111,7 @@ const SkillSharingFeed = () => {
     fetchSkills();
   }, [token]);
 
-  const userSkills = skills.filter(skill => skill.user?.email != email);
+  const userSkills = skills.filter(skill => skill.user?.email !== email);
 
   return (
     <div className="flex">
