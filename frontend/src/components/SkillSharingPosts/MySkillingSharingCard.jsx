@@ -65,6 +65,62 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
     }
   };
 
+  //edit a post
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState({
+    title: skill.title,
+    description: skill.description,
+    file: null,
+  });
+
+  const openEditModal = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "file") {
+      setEditData((prev) => ({ ...prev, file: files[0] }));
+    } else {
+      setEditData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const formData = new FormData();
+      formData.append("title", editData.title);
+      formData.append("description", editData.description);
+      if (editData.file) {
+        formData.append("file", editData.file);
+      }
+
+      await axios.put(
+        `http://localhost:8080/api/skills/${skill.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      alert("Skill updated successfully");
+      closeEditModal();
+      window.location.reload(); // or trigger parent update
+    } catch (error) {
+      console.error("Error updating skill:", error);
+      alert("Failed to update skill");
+    }
+  };
+
   return (
     <div>
       <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
@@ -75,7 +131,7 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
 
           <div className="flex space-x-4 text-2xl ml-auto">
             <div className="cursor-pointer text-blue-600 flex items-center">
-              <MdEdit className="mr-1" />
+              <MdEdit onClick={openEditModal} className="mr-1" />
             </div>
             <div
               onClick={handleDelete}
@@ -153,6 +209,77 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
               alt="Skill Preview"
               className="w-full h-auto"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
+          onClick={closeEditModal}
+        >
+          <div
+            className="bg-white p-6 rounded-md w-full max-w-md shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold mb-4">Edit Skill Post</h2>
+            <input
+              type="text"
+              name="title"
+              value={editData.title}
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Title"
+            />
+            <textarea
+              name="description"
+              value={editData.description}
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded mb-3"
+              rows="3"
+              placeholder="Description"
+            ></textarea>
+            {skill.imageUrl && (
+              <div className="mb-3">
+                {skill.imageUrl.endsWith(".mp4") ? (
+                  <video controls className="w-full h-auto">
+                    <source
+                      src={`http://localhost:8080/${skill.imageUrl}`}
+                      type="video/mp4"
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <img
+                    src={`http://localhost:8080/${skill.imageUrl}`}
+                    alt="Current Preview"
+                    className="w-full h-auto rounded"
+                  />
+                )}
+              </div>
+            )}
+            <input
+              type="file"
+              name="file"
+              onChange={handleEditChange}
+              className="w-full border p-2 rounded mb-3"
+            />
+
+            <div className="flex justify-end">
+              <button
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2"
+                onClick={closeEditModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-800 text-white px-4 py-2 rounded"
+                onClick={handleEditSubmit}
+              >
+                Update
+              </button>
+            </div>
           </div>
         </div>
       )}
