@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navigation from "../Navigation/Navigation.jsx";
 import SkillSharingCard from "./SkillSharingCard.jsx";
 import axios from "axios";
+import SkillSharingRightPart from "./SkillSharingRightPart.jsx";
 
 const SkillSharingFeed = () => {
   const token = localStorage.getItem("token"); // Get the saved JWT token
@@ -111,7 +112,7 @@ const SkillSharingFeed = () => {
     fetchSkills();
   }, [token]);
 
-  const userSkills = skills.filter(skill => skill.user?.email !== email);
+  const userSkills = skills.filter((skill) => skill.user?.email !== email);
 
   return (
     <div className="flex">
@@ -204,6 +205,9 @@ const SkillSharingFeed = () => {
             <SkillSharingCard key={skill.id} skill={skill} />
           ))}
         </div>
+      </div>
+      <div>
+        <SkillSharingRightPart/>
       </div>
     </div>
   );

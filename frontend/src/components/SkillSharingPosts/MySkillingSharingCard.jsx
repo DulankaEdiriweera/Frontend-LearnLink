@@ -95,7 +95,7 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
         {/* Post Image or Video */}
         <div className="mt-4">
           {skill.imageUrl && skill.imageUrl.endsWith(".mp4") ? (
-            <video controls width="80%" height="auto">
+            <video controls width="60%" height="auto">
               <source
                 src={`http://localhost:8080/${skill.imageUrl}`}
                 type="video/mp4"
@@ -107,7 +107,7 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
               src={`http://localhost:8080/${skill.imageUrl}`}
               alt="Skill"
               className="cursor-pointer"
-              style={{ maxWidth: "80%", height: "auto" }}
+              style={{ maxWidth: "60%", height: "auto" }}
               onClick={handleImagePreview}
             />
           )}
