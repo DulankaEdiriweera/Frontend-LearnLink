@@ -33,10 +33,11 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
     setUserCommented(!userCommented); // Toggle comment state
   };
 
-
   //delete a post
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this skill?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this skill?"
+    );
     if (!confirmDelete) return;
 
     try {
@@ -66,7 +67,10 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
             <div className="cursor-pointer text-blue-600 flex items-center">
               <MdEdit className="mr-1" />
             </div>
-            <div onClick={handleDelete} className="cursor-pointer text-red-600 flex items-center">
+            <div
+              onClick={handleDelete}
+              className="cursor-pointer text-red-600 flex items-center"
+            >
               <MdDeleteForever className="mr-1" />
             </div>
           </div>
@@ -80,11 +84,19 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
 
         {/* Post Image or Video */}
         <div className="mt-4">
-          {skill.imageUrl && (
+          {skill.imageUrl && skill.imageUrl.endsWith(".mp4") ? (
+            <video controls width="80%" height="auto">
+              <source
+                src={`http://localhost:8080/${skill.imageUrl}`}
+                type="video/mp4"
+              />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
             <img
               src={`http://localhost:8080/${skill.imageUrl}`}
-              alt="Post Media"
-              className="w-2/3 h-auto object-cover rounded-lg"
+              alt="Skill"
+              style={{ maxWidth: "80%", height: "auto" }}
             />
           )}
         </div>

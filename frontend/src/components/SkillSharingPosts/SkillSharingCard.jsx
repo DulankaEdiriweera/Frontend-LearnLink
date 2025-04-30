@@ -34,24 +34,32 @@ const SkillSharingCard = ({ skill }) => {
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
       {/* Post Owner */}
       <div className="flex items-center mb-2">
-        <div className="font-semibold text-lg text-gray-800">{skill.user ? skill.user.username : 'Unknown User'}</div>
+        <div className="font-semibold text-lg text-gray-800">
+          {skill.user ? skill.user.username : "Unknown User"}
+        </div>
       </div>
 
       {/* Post Title */}
       <div className="text-xl font-semibold mb-2">{skill.title}</div>
 
       {/* Post Description */}
-      <p className="text-gray-700">
-      {skill.description}
-      </p>
+      <p className="text-gray-700">{skill.description}</p>
 
       {/* Post Image or Video */}
       <div className="mt-4">
-        {skill.imageUrl && (
+        {skill.imageUrl && skill.imageUrl.endsWith(".mp4") ? (
+          <video controls width="80%" height="auto">
+            <source
+              src={`http://localhost:8080/${skill.imageUrl}`}
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
+        ) : (
           <img
             src={`http://localhost:8080/${skill.imageUrl}`}
-            alt="Post Media"
-            className="w-2/3 h-auto object-cover rounded-lg"
+            alt="Skill"
+            style={{ maxWidth: "80%", height: "auto" }}
           />
         )}
       </div>
