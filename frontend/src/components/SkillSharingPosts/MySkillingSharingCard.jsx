@@ -3,6 +3,7 @@ import { FaThumbsUp, FaComment } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { MdEdit } from "react-icons/md";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const MySkillingSharingCard = ({ skill, onDelete }) => {
   // State to keep track of like and comment counts
@@ -45,10 +46,17 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
 
   //delete a post
   const handleDelete = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this skill?"
-    );
-    if (!confirmDelete) return;
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+  
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -57,11 +65,11 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      alert("Skill deleted successfully");
+      Swal.fire("Deleted!", "Your Skill Post has been deleted.", "success");
       onDelete(skill.id); // Notify parent to remove the deleted card
     } catch (error) {
       console.error("Error deleting skill:", error);
-      alert("Failed to delete skill");
+      Swal.fire("Failed!", "Skill Post could not be deleted.", "error");
     }
   };
 
@@ -112,12 +120,15 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
         }
       );
 
-      alert("Skill updated successfully");
+      Swal.fire("Success!", "Skill Post updated successfully", "success");
       closeEditModal();
-      window.location.reload(); // or trigger parent update
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      //window.location.reload(); // or trigger parent update
     } catch (error) {
       console.error("Error updating skill:", error);
-      alert("Failed to update skill");
+      Swal.fire("Error!", "Failed to update the  Skill Post", "error");
     }
   };
 

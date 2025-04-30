@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import MySkillingSharingCard from "./MySkillingSharingCard";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const MySkillSharingPosts = () => {
   const token = localStorage.getItem("token"); // Get the saved JWT token
@@ -13,7 +14,11 @@ const MySkillSharingPosts = () => {
     // Fetch the skills from the backend
     const fetchSkills = async () => {
       if (!token) {
-        alert("User not logged in");
+        Swal.fire({
+          icon: "warning",
+          title: "Not Logged In",
+          text: "Please log in to create a post.",
+        });
         return;
       }
 
@@ -33,22 +38,26 @@ const MySkillSharingPosts = () => {
     fetchSkills();
   }, [token]);
 
-  const userSkills = skills.filter(skill => skill.user?.email === email);
-
+  const userSkills = skills.filter((skill) => skill.user?.email === email);
 
   //delete a post
   const handleDeleteSkill = (id) => {
     setSkills((prevSkills) => prevSkills.filter((skill) => skill.id !== id));
   };
-  
 
-  return <div>
-    <div className="pt-10 pr-10">
-          {userSkills.map((skill) => (
-            <MySkillingSharingCard key={skill.id} skill={skill} onDelete={handleDeleteSkill}/>
-          ))}
-        </div>
-  </div>;
+  return (
+    <div>
+      <div className="pt-10 pr-10">
+        {[...userSkills].reverse().map((skill) => (
+          <MySkillingSharingCard
+            key={skill.id}
+            skill={skill}
+            onDelete={handleDeleteSkill}
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default MySkillSharingPosts;

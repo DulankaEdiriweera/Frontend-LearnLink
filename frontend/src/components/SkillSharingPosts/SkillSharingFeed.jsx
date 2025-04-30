@@ -3,6 +3,7 @@ import Navigation from "../Navigation/Navigation.jsx";
 import SkillSharingCard from "./SkillSharingCard.jsx";
 import axios from "axios";
 import SkillSharingRightPart from "./SkillSharingRightPart.jsx";
+import Swal from "sweetalert2";
 
 const SkillSharingFeed = () => {
   const token = localStorage.getItem("token"); // Get the saved JWT token
@@ -38,7 +39,14 @@ const SkillSharingFeed = () => {
       );
 
       console.log("Post Created:", response.data);
-      alert("Post created successfully!");
+      Swal.fire({
+        icon: "success",
+        title: "Post Created!",
+        text: "Your skill-sharing post has been successfully uploaded.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      
 
       // Reset form
       setFormData({
@@ -49,7 +57,11 @@ const SkillSharingFeed = () => {
       setPreview(null);
     } catch (error) {
       console.error("Error creating post:", error);
-      alert("Failed to create post");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data || "Failed to create post",
+      });
     }
   };
 
@@ -92,7 +104,11 @@ const SkillSharingFeed = () => {
     // Fetch the skills from the backend
     const fetchSkills = async () => {
       if (!token) {
-        alert("User not logged in");
+        Swal.fire({
+          icon: "warning",
+          title: "Not Logged In",
+          text: "Please log in to create a post.",
+        });
         return;
       }
 
@@ -201,7 +217,7 @@ const SkillSharingFeed = () => {
           </form>
         </div>
         <div className="pt-10 pr-10">
-          {userSkills.map((skill) => (
+          {[...userSkills].reverse().map((skill) => (
             <SkillSharingCard key={skill.id} skill={skill} />
           ))}
         </div>

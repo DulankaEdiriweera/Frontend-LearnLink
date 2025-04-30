@@ -37,7 +37,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="h-screen w-64 bg-slate-400 flex flex-col p-4 shadow-lg rounded-2xl mt-2 mb-2 ml-2">
+    <div className="h-screen w-64 bg-blue-200 flex flex-col p-4 shadow-lg rounded-2xl mt-2 mb-2 ml-2">
       <div className="flex justify-center mb-6">
         <img src={Logo} alt="LearnLink Logo" className="h-auto w-auto" />
       </div>
@@ -51,7 +51,7 @@ useEffect(() => {
               key={index}
               to={item.path || "#"}
               className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-300 ${
-                isActive ? "bg-slate-300" : "hover:bg-slate-300"
+                isActive ? "bg-blue-300" : "hover:bg-blue-300"
               }`}
             >
               <div className="text-2xl">{item.icon}</div>
