@@ -5,8 +5,7 @@ import { MdBusinessCenter, MdSchool } from "react-icons/md";
 import profileBackground from "../../assets/profilebackground.png";
 import Navigation from "../Navigation/Navigation.jsx";
 import MySkillSharingPosts from "../SkillSharingPosts/MySkillSharingPosts.jsx";
-import MyLearningPlanPosts from "../LearningPlanSharing/MyLearningPlanPosts";
-
+import MyLearningPlanPosts from "../LearningPlanSharing/MyLearningPlanPosts.jsx";
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
   const navigate = useNavigate();
@@ -98,25 +97,10 @@ const UserProfile = () => {
           <div className="mt-8 flex space-x-6 border-b border-gray-200">
             {[
               "mySkillSharingPosts",
-              "learningPlan",
+              "myLearningPlanPosts",
               "goalTracking",
               "learningProgress",
             ].map((item) => (
-              <button
-                key={item}
-                onClick={() => handleTabChange(item)}
-                className={`pb-2 capitalize ${tab === item
-                    ? "border-b-2 border-blue-600 text-blue-600 font-semibold"
-                    : "text-gray-500"
-                  }`}
-              >
-                {item.replace(/([A-Z])/g, " $1")}
-              </button>
-            ))}
-          </div>
-          {/* Navigation Tabs */}
-          <div className="mt-8 flex space-x-6 border-b border-gray-200">
-            {["skillSharing", "LearningPlan", "goalTracking", "learningProgress"].map((item) => (
               <button
                 key={item}
                 onClick={() => handleTabChange(item)}
@@ -133,7 +117,7 @@ const UserProfile = () => {
           {/* Tab Content */}
           <div className="mt-6">
             {tab === "mySkillSharingPosts" && <div><MySkillSharingPosts /></div>}
-            {tab === "learningPlan" && <div>Learning Plan Content</div>}
+            {tab === "myLearningPlanPosts" && <div><MyLearningPlanPosts /></div>}
             {tab === "goalTracking" && <div>Goal Tracking Content</div>}
             {tab === "learningProgress" && <div>Learning Progress Content</div>}
           </div>
@@ -141,16 +125,6 @@ const UserProfile = () => {
       </div>
     </div>
   );
-  {/* Tab Content */ }
-  <div className="mt-6">
-    {tab === "skillSharing" && <div>Skill Sharing Content</div>}
-    {tab === "LearningPlan" && <div><MyLearningPlanPosts /></div>}
-    {tab === "goalTracking" && <div>Goal Tracking Content</div>}
-    {tab === "learningProgress" && <div>Learning Progress Content</div>}
-  </div>
-            </div >
-        </div >
-    );
 };
 
 export default UserProfile;

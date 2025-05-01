@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { FaThumbsUp, FaComment } from "react-icons/fa";
 import { MdDeleteForever, MdEdit } from "react-icons/md";
 import axios from "axios";
-import Swal from "sweetalert2";
 
-const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
+const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
     const [likes, setLikes] = useState(120);
     const [comments, setComments] = useState(45);
     const [userLiked, setUserLiked] = useState(false);
@@ -19,47 +18,46 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
         file: null,
     });
     const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
+    const [loading, setLoading] = useState(false);  // To track loading state
+    const [actionLoading, setActionLoading] = useState(false);  // For other actions like like and comment
 
     const handleLike = () => {
+        setActionLoading(true);
         setLikes(userLiked ? likes - 1 : likes + 1);
         setUserLiked(!userLiked);
+        setActionLoading(false);
     };
 
     const handleComment = () => {
+        setActionLoading(true);
         setComments(userCommented ? comments - 1 : comments + 1);
         setUserCommented(!userCommented);
+        setActionLoading(false);
     };
 
     const handleImagePreview = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
     const handleDelete = async () => {
-        const result = await Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
-        });
+        const result = window.confirm("Are you sure you want to delete this post? This action cannot be undone.");
 
-        if (!result.isConfirmed) return;
+        if (!result) return;
 
         try {
+            setLoading(true);  // Start loading during delete operation
             const token = localStorage.getItem("token");
             await axios.delete(`http://localhost:8080/api/learning-plans/${learningPlan.id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            Swal.fire("Deleted!", "Your learning plan has been deleted.", "success");
+            alert("Your learning plan has been deleted.");
             onDelete(learningPlan.id);
         } catch (error) {
             console.error("Error deleting learning plan:", error);
-            Swal.fire("Failed!", "Learning plan could not be deleted.", "error");
+            alert("Learning plan could not be deleted.");
+        } finally {
+            setLoading(false);  // End loading after the operation
         }
     };
 
@@ -87,9 +85,7 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
     const handleEditSubmit = async () => {
         if (!validateForm()) return;
 
-        setLoading(true);
-        setIsUpdating(true);
-
+        setLoading(true);  // Show loading spinner
         const token = localStorage.getItem("token");
 
         try {
@@ -102,7 +98,7 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
                 formData.append("file", editData.file);
             }
 
-            await axios.put(
+            const response = await axios.put(
                 `http://localhost:8080/api/learning-plans/${learningPlan.id}`,
                 formData,
                 {
@@ -113,39 +109,40 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
                 }
             );
 
-            Swal.fire("Success!", "Learning plan updated successfully", "success");
-            onDelete(learningPlan.id); // Refresh the list after update
+            alert("Learning plan updated successfully");
+
+            // Call onUpdate with new data to update the UI dynamically without page reload
+            if (onUpdate) {
+                onUpdate(response.data);
+            }
         } catch (error) {
             console.error("Error updating learning plan:", error);
-            Swal.fire("Error!", "Failed to update the learning plan", "error");
+            alert("Failed to update the learning plan.");
         } finally {
-            setLoading(false);
-            setIsUpdating(false);
+            setLoading(false);  // Hide loading spinner
+            closeEditModal();
         }
-
-        closeEditModal();
     };
 
     return (
         <div className="flex justify-center">
-            <div className="bg-white shadow-lg rounded-lg p-6 mb-4 w-full max-w-lg">
-                {loading && !isUpdating && (
-                    <div className="absolute inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="loader"></div>
+            {loading && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-lg flex flex-col items-center">
+                        <div className="w-12 h-12 border-4 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="mt-3 text-gray-700">Updating...</p>
                     </div>
-                )}
+                </div>
+            )}
 
+            <div className="bg-white shadow-lg rounded-lg p-6 mb-4 w-full max-w-lg relative">
                 <div className="flex items-center justify-between mb-2 w-full">
                     <div className="font-semibold text-lg text-gray-800">
                         {learningPlan.user ? learningPlan.user.username : "Unknown User"}
                     </div>
                     <div className="flex space-x-4 text-2xl ml-auto">
-                        <div className="cursor-pointer text-blue-600 flex items-center">
-                            <MdEdit onClick={openEditModal} className="mr-1" />
-                        </div>
-                        <div onClick={handleDelete} className="cursor-pointer text-red-600 flex items-center">
-                            <MdDeleteForever className="mr-1" />
-                        </div>
+                        <MdEdit onClick={openEditModal} className="cursor-pointer text-blue-600" />
+                        <MdDeleteForever onClick={handleDelete} className="cursor-pointer text-red-600" />
                     </div>
                 </div>
 
@@ -156,17 +153,16 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
                     <p>End Date: {learningPlan.endDate}</p>
                 </div>
 
-                <div className="mt-4">
-                    {learningPlan.imageUrl && (
+                {learningPlan.imageUrl && (
+                    <div className="mt-4">
                         <img
                             src={`http://localhost:8080/${learningPlan.imageUrl}`}
                             alt="learningPlan"
-                            className="cursor-pointer"
-                            style={{ maxWidth: "60%", height: "auto" }}
+                            className="cursor-pointer max-w-full h-auto"
                             onClick={handleImagePreview}
                         />
-                    )}
-                </div>
+                    </div>
+                )}
 
                 <div className="flex justify-between items-center mt-4">
                     <div
@@ -186,6 +182,15 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
                 </div>
             </div>
 
+            {actionLoading && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-lg flex flex-col items-center">
+                        <div className="w-12 h-12 border-4 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="mt-3 text-gray-700">Action in progress...</p>
+                    </div>
+                </div>
+            )}
+
             {isEditModalOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
@@ -196,6 +201,7 @@ const MyLearningPlanCard = ({ learningPlan, onDelete }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h2 className="text-xl font-semibold mb-4">Edit Learning Plan</h2>
+
                         <input
                             type="text"
                             name="title"
