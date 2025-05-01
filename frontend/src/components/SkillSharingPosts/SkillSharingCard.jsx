@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaThumbsUp, FaComment ,FaCommentAlt} from "react-icons/fa";
+import { FaThumbsUp, FaComment, FaCommentAlt } from "react-icons/fa";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -18,18 +18,15 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       const liked = skill.likedUsers.some((u) => u.email === currentUser.email);
       setUserLiked(liked);
     }
-  
+
     if (skill.comments && currentUser) {
       const hasCommented = skill.comments.some(
         (c) => c.user?.email === currentUser.email
       );
       setUserCommented(hasCommented);
-      setComments(
-        new Set(skill.comments.map((c) => c.user?.email)).size
-      ); // Unique comment users count
+      setComments(new Set(skill.comments.map((c) => c.user?.email)).size); // Unique comment users count
     }
   }, [skill.likedUsers, skill.comments, currentUser]);
-  
 
   // Handle like button click
   const handleLike = async () => {
@@ -134,12 +131,12 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       );
       const commentData = res.data;
       setCommentList(commentData);
-  
+
       const uniqueUserEmails = new Set(
         commentData.map((comment) => comment.user?.email)
       );
       setComments(uniqueUserEmails.size);
-  
+
       if (currentUser) {
         setUserCommented(uniqueUserEmails.has(currentUser.email));
       }
@@ -147,7 +144,6 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       console.error("Failed to fetch comments", err);
     }
   };
-  
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
@@ -208,21 +204,20 @@ const SkillSharingCard = ({ skill, currentUser }) => {
           </div>
         </div>
 
-       
         {/* Comment Button */}
         <div
-  className={`flex items-center cursor-pointer ${
-    userCommented ? "text-blue-500" : "text-gray-500"
-  }`}
-  onClick={openCommentModal}
->
-  {userCommented ? (
-    <FaCommentAlt className="mr-2 text-2xl" />
-  ) : (
-    <FaCommentAlt className="mr-2 text-2xl" />
-  )}
-  <span>{comments}</span>
-</div>
+          className={`flex items-center cursor-pointer ${
+            userCommented ? "text-blue-500" : "text-gray-500"
+          }`}
+          onClick={openCommentModal}
+        >
+          {userCommented ? (
+            <FaCommentAlt className="mr-2 text-2xl" />
+          ) : (
+            <FaCommentAlt className="mr-2 text-2xl" />
+          )}
+          <span>{comments}</span>
+        </div>
       </div>
       {/* Modal Preview for Images Only */}
       {isModalOpen && (
