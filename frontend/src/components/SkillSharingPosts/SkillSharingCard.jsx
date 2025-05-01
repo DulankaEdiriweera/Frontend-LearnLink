@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { FaThumbsUp, FaComment } from "react-icons/fa";
+import { FaThumbsUp, FaComment ,FaCommentAlt} from "react-icons/fa";
 import axios from "axios";
 import Swal from "sweetalert2";
 
 const SkillSharingCard = ({ skill, currentUser }) => {
   // State to keep track of like and comment counts
   const [likes, setLikes] = useState(skill.likedUsers?.length || 0);
-  const [comments, setComments] = useState(45);
 
   // State to track if the logged-in user has liked or commented
   const [userLiked, setUserLiked] = useState(false); // Change to true if user liked
@@ -19,9 +18,18 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       const liked = skill.likedUsers.some((u) => u.email === currentUser.email);
       setUserLiked(liked);
     }
-    console.log("likedUsers", skill.likedUsers);
-    console.log("currentUser", currentUser.email);
-  }, [skill.likedUsers, currentUser]);
+  
+    if (skill.comments && currentUser) {
+      const hasCommented = skill.comments.some(
+        (c) => c.user?.email === currentUser.email
+      );
+      setUserCommented(hasCommented);
+      setComments(
+        new Set(skill.comments.map((c) => c.user?.email)).size
+      ); // Unique comment users count
+    }
+  }, [skill.likedUsers, skill.comments, currentUser]);
+  
 
   // Handle like button click
   const handleLike = async () => {
@@ -44,16 +52,6 @@ const SkillSharingCard = ({ skill, currentUser }) => {
     } catch (error) {
       Swal.fire("Error", "Failed to update like", "error");
     }
-  };
-
-  // Handle comment button click
-  const handleComment = () => {
-    if (userCommented) {
-      setComments(comments - 1); // Decrease comment count if the user has already commented
-    } else {
-      setComments(comments + 1); // Increase comment count if the user comments
-    }
-    setUserCommented(!userCommented); // Toggle comment state
   };
 
   const handleImagePreview = () => {
@@ -83,6 +81,73 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       Swal.fire("Error", "Failed to load liked users", "error");
     }
   };
+
+  //Comments
+  // Add these states at the top
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [comments, setComments] = useState(0);
+
+  // Function to open comment modal
+  const openCommentModal = () => {
+    setIsCommentModalOpen(true);
+    fetchComments();
+  };
+
+  // Function to close comment modal
+  const closeCommentModal = () => {
+    setIsCommentModalOpen(false);
+    setNewComment("");
+  };
+
+  // Submit new comment
+  const handleCommentSubmit = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      console.log({ text: newComment });
+      await axios.post(
+        `http://localhost:8080/api/skills/${skill.id}/comments`,
+        { text: newComment },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setComments(comments + 1); // Optimistically increase count
+      setUserCommented(true);
+      closeCommentModal();
+      Swal.fire("Success", "Comment added", "success");
+    } catch (err) {
+      Swal.fire("Error", "Failed to submit comment", "error");
+    }
+  };
+
+  const [commentList, setCommentList] = useState([]);
+  const fetchComments = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/skills/${skill.id}/comments`
+      );
+      const commentData = res.data;
+      setCommentList(commentData);
+  
+      const uniqueUserEmails = new Set(
+        commentData.map((comment) => comment.user?.email)
+      );
+      setComments(uniqueUserEmails.size);
+  
+      if (currentUser) {
+        setUserCommented(uniqueUserEmails.has(currentUser.email));
+      }
+    } catch (err) {
+      console.error("Failed to fetch comments", err);
+    }
+  };
+  
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
@@ -143,16 +208,21 @@ const SkillSharingCard = ({ skill, currentUser }) => {
           </div>
         </div>
 
+       
         {/* Comment Button */}
         <div
-          className={`flex items-center cursor-pointer ${
-            userCommented ? "text-blue-500" : "text-gray-500"
-          }`}
-          onClick={handleComment}
-        >
-          <FaComment className="mr-2 text-2xl" />
-          <span>{comments}</span>
-        </div>
+  className={`flex items-center cursor-pointer ${
+    userCommented ? "text-blue-500" : "text-gray-500"
+  }`}
+  onClick={openCommentModal}
+>
+  {userCommented ? (
+    <FaCommentAlt className="mr-2 text-2xl" />
+  ) : (
+    <FaCommentAlt className="mr-2 text-2xl" />
+  )}
+  <span>{comments}</span>
+</div>
       </div>
       {/* Modal Preview for Images Only */}
       {isModalOpen && (
@@ -169,6 +239,62 @@ const SkillSharingCard = ({ skill, currentUser }) => {
               alt="Skill Preview"
               className="w-full h-auto"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Adding Comment */}
+      {isCommentModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+          onClick={closeCommentModal}
+        >
+          <div
+            className="bg-white p-6 rounded shadow-lg w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold mb-4">Add a Comment</h2>
+            <textarea
+              className="w-full border border-gray-300 rounded p-2 mb-4"
+              rows={4}
+              placeholder="Type your comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Comments:</h3>
+              <ul className="space-y-2 max-h-60 overflow-y-auto">
+                {commentList.map((comment, index) => (
+                  <li
+                    key={index}
+                    className="border border-gray-200 p-2 rounded"
+                  >
+                    <p className="text-sm text-gray-700">
+                      <strong>{comment.user?.username || "Anonymous"}:</strong>{" "}
+                      {comment.text}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2"
+                onClick={closeCommentModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={handleCommentSubmit}
+              >
+                Comment
+              </button>
+            </div>
           </div>
         </div>
       )}
