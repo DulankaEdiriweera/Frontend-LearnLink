@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaThumbsUp, FaComment } from "react-icons/fa";
 import { MdDeleteForever, MdEdit } from "react-icons/md";
 import axios from "axios";
 
-const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
-    const [likes, setLikes] = useState(120);
-    const [comments, setComments] = useState(45);
+const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate, currentUser }) => {
+    const [likes, setLikes] = useState(learningPlan.likedUsers?.length || 0);
+    const [comments, setComments] = useState(0);
     const [userLiked, setUserLiked] = useState(false);
     const [userCommented, setUserCommented] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,46 +18,68 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
         file: null,
     });
     const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);  // To track loading state
-    const [actionLoading, setActionLoading] = useState(false);  // For other actions like like and comment
+    const [loading, setLoading] = useState(false); // for delete
+    const [actionLoading, setActionLoading] = useState(false); // for like
+    const [updateLoading, setUpdateLoading] = useState(false); // for update
 
-    const handleLike = () => {
+    useEffect(() => {
+        if (learningPlan.likedUsers && currentUser) {
+            const liked = learningPlan.likedUsers.some((u) => u.email === currentUser.email);
+            setUserLiked(liked);
+        }
+        setLikes(learningPlan.likedUsers?.length || 0);
+    }, [learningPlan.likedUsers, currentUser]);
+
+    const handleLike = async () => {
         setActionLoading(true);
-        setLikes(userLiked ? likes - 1 : likes + 1);
-        setUserLiked(!userLiked);
-        setActionLoading(false);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.put(
+                `http://localhost:8080/api/learning-plans/${learningPlan.id}/like`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            setLikes(res.data.likeCount);
+            setUserLiked(res.data.liked);
+
+            // Ensure loader is visible for at least 1 second
+            setTimeout(() => {
+                setActionLoading(false);
+            }, 1000);
+        } catch (err) {
+            console.error("Failed to update like", err);
+            alert("Failed to like post.");
+            setActionLoading(false); // In case of error, hide loader immediately
+        }
     };
 
     const handleComment = () => {
-        setActionLoading(true);
         setComments(userCommented ? comments - 1 : comments + 1);
         setUserCommented(!userCommented);
-        setActionLoading(false);
     };
 
     const handleImagePreview = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
     const handleDelete = async () => {
-        const result = window.confirm("Are you sure you want to delete this post? This action cannot be undone.");
-
+        const result = window.confirm("Are you sure you want to delete this post?");
         if (!result) return;
 
         try {
-            setLoading(true);  // Start loading during delete operation
+            setLoading(true);
             const token = localStorage.getItem("token");
             await axios.delete(`http://localhost:8080/api/learning-plans/${learningPlan.id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
             });
-            alert("Your learning plan has been deleted.");
+            alert("Post deleted.");
             onDelete(learningPlan.id);
         } catch (error) {
-            console.error("Error deleting learning plan:", error);
-            alert("Learning plan could not be deleted.");
+            console.error("Delete error:", error);
+            alert("Could not delete post.");
         } finally {
-            setLoading(false);  // End loading after the operation
+            setLoading(false);
         }
     };
 
@@ -84,8 +106,7 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
 
     const handleEditSubmit = async () => {
         if (!validateForm()) return;
-
-        setLoading(true);  // Show loading spinner
+        setUpdateLoading(true);
         const token = localStorage.getItem("token");
 
         try {
@@ -109,24 +130,31 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
                 }
             );
 
-            alert("Learning plan updated successfully");
-
-            // Call onUpdate with new data to update the UI dynamically without page reload
-            if (onUpdate) {
-                onUpdate(response.data);
-            }
+            alert("Updated successfully");
+            if (onUpdate) onUpdate(response.data);
         } catch (error) {
-            console.error("Error updating learning plan:", error);
-            alert("Failed to update the learning plan.");
+            console.error("Update error:", error);
+            alert("Update failed.");
         } finally {
-            setLoading(false);  // Hide loading spinner
+            setUpdateLoading(false);
             closeEditModal();
         }
     };
 
     return (
         <div className="flex justify-center">
+            {/* Delete Loader */}
             {loading && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-lg flex flex-col items-center">
+                        <div className="w-12 h-12 border-4 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="mt-3 text-gray-700">Deleting...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Update Loader */}
+            {updateLoading && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-5 rounded-lg flex flex-col items-center">
                         <div className="w-12 h-12 border-4 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
@@ -182,6 +210,7 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
                 </div>
             </div>
 
+            {/* Action Loading (like/comment) */}
             {actionLoading && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-5 rounded-lg flex flex-col items-center">
@@ -191,6 +220,7 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
                 </div>
             )}
 
+            {/* Edit Modal */}
             {isEditModalOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
@@ -228,7 +258,6 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
                             value={editData.startDate}
                             onChange={handleEditChange}
                             className="w-full border p-2 rounded mb-3"
-                            min={new Date().toISOString().split("T")[0]}
                         />
                         {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
 
@@ -238,7 +267,6 @@ const MyLearningPlanCard = ({ learningPlan, onDelete, onUpdate }) => {
                             value={editData.endDate}
                             onChange={handleEditChange}
                             className="w-full border p-2 rounded mb-3"
-                            min={new Date().toISOString().split("T")[0]}
                         />
                         {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate}</p>}
 

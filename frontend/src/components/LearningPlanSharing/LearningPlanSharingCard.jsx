@@ -1,16 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { FaThumbsUp, FaComment, FaUserCircle } from "react-icons/fa";
+import axios from "axios";
+import Swal from "sweetalert2";
 
-const LearningPlanSharingCard = ({ learningPlan }) => {
-    const [likes, setLikes] = useState(0);
+const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
+    const [likes, setLikes] = useState(learningPlan.likedUsers?.length || 0);
     const [comments, setComments] = useState(0);
     const [userLiked, setUserLiked] = useState(false);
     const [userCommented, setUserCommented] = useState(false);
     const [timeDisplay, setTimeDisplay] = useState("");
 
-    const handleLike = () => {
-        setLikes(userLiked ? likes - 1 : likes + 1);
-        setUserLiked(!userLiked);
+    useEffect(() => {
+        if (learningPlan.likedUsers && currentUser) {
+            const liked = learningPlan.likedUsers.some((u) => u.email === currentUser.email);
+            setUserLiked(liked);
+        }
+    }, [learningPlan.likedUsers, currentUser]);
+
+    const handleLike = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.put(
+                `http://localhost:8080/api/learning-plans/${learningPlan.id}/like`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            setLikes(res.data.likeCount);
+            setUserLiked(res.data.liked);
+        } catch (error) {
+            Swal.fire("Error", "Failed to update like", "error");
+        }
+    };
+
+    const fetchLikedUsers = async () => {
+        try {
+            const res = await axios.get(`http://localhost:8080/api/learning-plans/${learningPlan.id}/liked-users`);
+            Swal.fire({
+                title: `<div style="font-size: 24px;">👍 Liked by</div>`,
+                html: `<div style="text-align: left;">
+                        ${res.data.map((u) => `<p>${u.username} (${u.email})</p>`).join("")}
+                      </div>`,
+                icon: "info",
+            });
+        } catch (err) {
+            Swal.fire("Error", "Failed to load liked users", "error");
+        }
     };
 
     const handleComment = () => {
@@ -18,93 +55,50 @@ const LearningPlanSharingCard = ({ learningPlan }) => {
         setUserCommented(!userCommented);
     };
 
-    // Function to format the time as "time ago"
     const getRelativeTime = (dateString) => {
-        // If no date string is provided, use the current time
-        if (!dateString) {
-            return "Just now";
-        }
-
+        if (!dateString) return "Just now";
         const now = new Date();
-        let taskDate;
+        const taskDate = new Date(dateString);
+        if (isNaN(taskDate.getTime())) return "Just now";
 
-        try {
-            // Try to parse the date string
-            taskDate = new Date(dateString);
+        const seconds = Math.floor((now - taskDate) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
 
-            // Check if the date is valid
-            if (isNaN(taskDate.getTime())) {
-                return "Just now";
-            }
-        } catch (error) {
-            console.error("Error parsing date:", error);
-            return "Just now";
-        }
-
-        const differenceInSeconds = Math.floor((now - taskDate) / 1000);
-        const differenceInMinutes = Math.floor(differenceInSeconds / 60);
-        const differenceInHours = Math.floor(differenceInMinutes / 60);
-        const differenceInDays = Math.floor(differenceInHours / 24);
-
-        // Just now (less than 5 seconds)
-        if (differenceInSeconds < 5) {
-            return "Just now";
-        }
-
-        if (differenceInSeconds < 60) {
-            return `${differenceInSeconds} second${differenceInSeconds > 1 ? "s" : ""} ago`;
-        } else if (differenceInMinutes < 60) {
-            return `${differenceInMinutes} minute${differenceInMinutes > 1 ? "s" : ""} ago`;
-        } else if (differenceInHours < 24) {
-            return `${differenceInHours} hour${differenceInHours > 1 ? "s" : ""} ago`;
-        } else {
-            return `${differenceInDays} day${differenceInDays > 1 ? "s" : ""} ago`;
-        }
+        if (seconds < 5) return "Just now";
+        if (seconds < 60) return `${seconds} second${seconds > 1 ? "s" : ""} ago`;
+        if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+        if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+        return `${days} day${days > 1 ? "s" : ""} ago`;
     };
 
-    // Update the time display every second
     useEffect(() => {
-        // Set initial time display
         setTimeDisplay(getRelativeTime(learningPlan.createdAt));
-
-        // Update the time display every second
         const intervalId = setInterval(() => {
             setTimeDisplay(getRelativeTime(learningPlan.createdAt));
         }, 1000);
-
-        // Clean up interval on component unmount
         return () => clearInterval(intervalId);
     }, [learningPlan.createdAt]);
 
     return (
         <div className="bg-white rounded-xl shadow-md p-4 mb-6 w-full max-w-xl mx-auto">
-            {/* Header */}
             <div className="flex items-center mb-4">
                 <FaUserCircle className="text-gray-500 text-4xl mr-3" />
                 <div>
-                    <p className="font-semibold text-gray-800">
-                        {learningPlan.user?.username || "Unknown User"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                        {timeDisplay}
-                    </p>
+                    <p className="font-semibold text-gray-800">{learningPlan.user?.username || "Unknown User"}</p>
+                    <p className="text-xs text-gray-500">{timeDisplay}</p>
                 </div>
             </div>
 
-            {/* Title */}
             <h2 className="text-lg font-bold text-gray-900 mb-1">{learningPlan.title}</h2>
-
-            {/* Description */}
             <p className="text-gray-700 text-sm mb-3">{learningPlan.description}</p>
 
-            {/* Dates */}
             <p className="text-xs text-gray-500 mb-3">
-                📅 <strong>Start:</strong> {learningPlan.startDate ? new Date(learningPlan.startDate).toLocaleDateString() : "N/A"}
-                {" | "}
-                <strong>End:</strong> {learningPlan.endDate ? new Date(learningPlan.endDate).toLocaleDateString() : "N/A"}
+                📅 <strong>Start:</strong> {learningPlan.startDate ? new Date(learningPlan.startDate).toLocaleDateString() : "N/A"} |
+                <strong> End:</strong> {learningPlan.endDate ? new Date(learningPlan.endDate).toLocaleDateString() : "N/A"}
             </p>
 
-            {/* Image */}
             {learningPlan.imageUrl && (
                 <div className="mb-3">
                     <img
@@ -115,15 +109,19 @@ const LearningPlanSharingCard = ({ learningPlan }) => {
                 </div>
             )}
 
-            {/* Footer - Like and Comment */}
-            <div className="flex justify-around border-t pt-3 mt-2 text-sm text-gray-600">
-                <button
-                    onClick={handleLike}
-                    className={`flex items-center gap-2 hover:text-blue-500 ${userLiked ? "text-blue-600 font-medium" : ""}`}
-                >
-                    <FaThumbsUp />
-                    <span>{likes}</span>
-                </button>
+            <div className="flex justify-between border-t pt-3 mt-2 text-sm text-gray-600">
+                <div className="flex gap-2 items-center">
+                    <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-1 hover:text-blue-500 ${userLiked ? "text-blue-600 font-medium" : ""}`}
+                    >
+                        <FaThumbsUp />
+                        <span>{likes}</span>
+                    </button>
+                    <button onClick={fetchLikedUsers} className="text-blue-500 text-xs hover:underline">
+                        View Likes
+                    </button>
+                </div>
                 <button
                     onClick={handleComment}
                     className={`flex items-center gap-2 hover:text-blue-500 ${userCommented ? "text-blue-600 font-medium" : ""}`}
