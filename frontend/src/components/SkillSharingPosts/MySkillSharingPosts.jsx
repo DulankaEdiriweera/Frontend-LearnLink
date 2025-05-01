@@ -45,6 +45,10 @@ const MySkillSharingPosts = () => {
     setSkills((prevSkills) => prevSkills.filter((skill) => skill.id !== id));
   };
 
+  const currentUser = {
+    email: email,
+  };
+
   return (
     <div>
       <div className="pt-10 pr-10">
@@ -53,6 +57,7 @@ const MySkillSharingPosts = () => {
             key={skill.id}
             skill={skill}
             onDelete={handleDeleteSkill}
+            currentUser={currentUser}
           />
         ))}
       </div>
