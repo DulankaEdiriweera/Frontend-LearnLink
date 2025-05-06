@@ -217,6 +217,11 @@ const SkillSharingCard = ({ skill, currentUser }) => {
         <div className="font-semibold text-lg text-gray-800">
           {skill.user ? skill.user.username : "Unknown User"}
         </div>
+        <div className="flex items-center space-x-1 text-xs text-gray-500">
+          <p>Posted on</p>
+          <p>{new Date(skill.createdAt).toLocaleString()}</p>
+        </div>
+
         <div className="font-semibold">
           <button
             onClick={isFollowing ? handleUnfollow : handleFollow}
