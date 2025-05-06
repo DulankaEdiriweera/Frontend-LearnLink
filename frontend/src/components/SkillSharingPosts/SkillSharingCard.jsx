@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaThumbsUp, FaComment, FaCommentAlt } from "react-icons/fa";
+import { FaUserCircle } from "react-icons/fa";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -148,7 +149,18 @@ const SkillSharingCard = ({ skill, currentUser }) => {
   return (
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
       {/* Post Owner */}
-      <div className="flex items-center mb-2">
+      <div className="flex items-center mb-2 gap-4">
+        <div className="font-semibold text-lg text-gray-800">
+          {skill.user?.profilePic ? (
+            <img
+              src={`http://localhost:8080/${skill.user.profilePic}`}
+              alt="Profile"
+              className="w-12 h-12 rounded-full object-cover border"
+            />
+          ) : (
+            <FaUserCircle className="text-gray-400 text-3xl" />
+          )}
+        </div>
         <div className="font-semibold text-lg text-gray-800">
           {skill.user ? skill.user.username : "Unknown User"}
         </div>
@@ -265,7 +277,22 @@ const SkillSharingCard = ({ skill, currentUser }) => {
                     className="border border-gray-200 p-2 rounded"
                   >
                     <p className="text-sm text-gray-700">
-                      <strong>{comment.user?.username || "Anonymous"}:</strong>{" "}
+                      <div className="flex items-center mb-2 gap-4">
+                        <div className="font-semibold text-lg text-gray-800">
+                          {comment.user?.profilePic ? (
+                            <img
+                              src={`http://localhost:8080/${comment.user.profilePic}`}
+                              alt="Profile"
+                              className="w-12 h-12 rounded-full object-cover border"
+                            />
+                          ) : (
+                            <FaUserCircle className="text-gray-400 text-3xl" />
+                          )}
+                        </div>
+                        <strong>
+                          {comment.user?.username || "Anonymous"}:
+                        </strong>{" "}
+                      </div>
                       {comment.text}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -276,7 +303,7 @@ const SkillSharingCard = ({ skill, currentUser }) => {
               </ul>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end mt-2">
               <button
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2"
                 onClick={closeCommentModal}
