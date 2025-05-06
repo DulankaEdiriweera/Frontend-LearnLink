@@ -8,6 +8,7 @@ import SignUp from './components/LoginandSignUp/SignUp';
 import LearningPlanFeed from './components/LearningPlanSharing/LearningPlanSharingFeed';
 import Profile from './components/Profile/Profile';
 import EditProfile from './components/Profile/EditProfile';
+import LearningProgressFeed from './components/LearningProgressPost/LearningProgressFeed';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path='/' element={<Home/>}/>
         <Route path='/skillSharingFeed' element={<SkillSharingFeed/>}/>
         <Route path='/learningPlanSharingFeed' element={<LearningPlanFeed/>}/>
+        <Route path='/learningProgressFeed' element={<LearningProgressFeed/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/signup' element={<SignUp/>}/>
         <Route path='/profile' element={<Profile/>}/>
