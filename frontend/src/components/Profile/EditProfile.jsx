@@ -131,7 +131,7 @@ const EditProfile = () => {
 
             <div className="absolute top-36 left-6">
               <div className="w-28 h-28 bg-white rounded-full border-4 border-white shadow flex items-center justify-center relative">
-                {profilePic ? (
+                {user.profilePic ? (
                   <img
                     src={
                       profilePic
