@@ -7,7 +7,7 @@ import Navigation from "../Navigation/Navigation.jsx";
 import MySkillSharingPosts from "../SkillSharingPosts/MySkillSharingPosts.jsx";
 import { useEffect } from "react";
 import axios from "axios";
-import MyLearningPlanPosts from "../LearningPlanSharing/MyLearningPlanPosts.jsx"
+import MyLearningProgressPosts from './../LearningProgressPost/MyLearningProgressPosts';
 
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
@@ -146,7 +146,9 @@ const UserProfile = () => {
               {tab === "learningPlan" && <div><MyLearningPlanPosts /></div>}
               {tab === "goalTracking" && <div>Goal Tracking Content</div>}
               {tab === "learningProgress" && (
-                <div>Learning Progress Content</div>
+                <div>
+                  <MyLearningProgressPosts />
+                </div>
               )}
             </div>
           </div>
