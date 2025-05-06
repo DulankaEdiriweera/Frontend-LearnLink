@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaThumbsUp, FaComment } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { MdEdit } from "react-icons/md";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { FaUserCircle } from "react-icons/fa";
 
-const MySkillingSharingCard = ({ skill, onDelete }) => {
+const MySkillingSharingCard = ({ skill, onDelete, currentUser }) => {
   // State to keep track of like and comment counts
-  const [likes, setLikes] = useState(120);
-  const [comments, setComments] = useState(45);
+  const [likes, setLikes] = useState(skill.likedUsers?.length || 0);
+  //const [comments, setComments] = useState(45);
 
   // State to track if the logged-in user has liked or commented
   const [userLiked, setUserLiked] = useState(false); // Change to true if user liked
@@ -16,25 +17,20 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Handle like button click
-  const handleLike = () => {
-    if (userLiked) {
-      setLikes(likes - 1); // Decrease like count if the user has already liked
-    } else {
-      setLikes(likes + 1); // Increase like count if the user likes the post
+  useEffect(() => {
+    if (skill.likedUsers && currentUser) {
+      const liked = skill.likedUsers.some((u) => u.email === currentUser.email);
+      setUserLiked(liked);
     }
-    setUserLiked(!userLiked); // Toggle like state
-  };
 
-  // Handle comment button click
-  const handleComment = () => {
-    if (userCommented) {
-      setComments(comments - 1); // Decrease comment count if the user has already commented
-    } else {
-      setComments(comments + 1); // Increase comment count if the user comments
+    if (skill.comments && currentUser) {
+      const hasCommented = skill.comments.some(
+        (c) => c.user?.email === currentUser.email
+      );
+      setUserCommented(hasCommented);
+      setComments(new Set(skill.comments.map((c) => c.user?.email)).size); // Unique comment users count
     }
-    setUserCommented(!userCommented); // Toggle comment state
-  };
+  }, [skill.likedUsers, skill.comments, currentUser]);
 
   const handleImagePreview = () => {
     setIsModalOpen(true);
@@ -55,7 +51,7 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
     });
-  
+
     if (!result.isConfirmed) return;
 
     try {
@@ -132,12 +128,74 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
     }
   };
 
+  //Likes
+  const fetchLikedUsers = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/skills/${skill.id}/liked-users`
+      );
+      console.log("Liked Users:", res.data);
+      Swal.fire({
+        title: `<div style="font-size: 24px;">👍 Liked by</div>`,
+        html: `<div style="text-align: left;">
+                ${res.data
+                  .map((u) => `<p>${u.username} (${u.email})</p>`)
+                  .join("")}
+              </div>`,
+        icon: "info",
+      });
+    } catch (err) {
+      Swal.fire("Error", "Failed to load liked users", "error");
+    }
+  };
+
+  //Comments
+  // Add these states at the top
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [comments, setComments] = useState(0);
+
+  // Function to open comment modal
+  const openCommentModal = () => {
+    fetchComments();
+  };
+
+  // Function to close comment modal
+  const closeCommentModal = () => {
+    setIsCommentModalOpen(false);
+  };
+
+  const [commentList, setCommentList] = useState([]);
+  const fetchComments = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/skills/${skill.id}/comments`
+      );
+      setCommentList(res.data);
+      setIsCommentModalOpen(true);
+    } catch (err) {
+      console.error("Failed to fetch comments", err);
+    }
+  };
+
   return (
     <div>
       <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-2 w-full">
-          <div className="font-semibold text-lg text-gray-800">
-            {skill.user ? skill.user.username : "Unknown User"}
+          <div className="flex items-center mb-2 gap-4">
+            <div className="font-semibold text-lg text-gray-800">
+              {skill.user?.profilePic ? (
+                <img
+                  src={`http://localhost:8080/${skill.user.profilePic}`}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full object-cover border"
+                />
+              ) : (
+                <FaUserCircle className="text-gray-400 text-3xl" />
+              )}
+            </div>
+            <div className="font-semibold text-lg text-gray-800">
+              {skill.user ? skill.user.username : "Unknown User"}
+            </div>
           </div>
 
           <div className="flex space-x-4 text-2xl ml-auto">
@@ -162,7 +220,7 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
         {/* Post Image or Video */}
         <div className="mt-4">
           {skill.imageUrl && skill.imageUrl.endsWith(".mp4") ? (
-            <video controls width="60%" height="auto">
+            <video controls width="30%" height="auto">
               <source
                 src={`http://localhost:8080/${skill.imageUrl}`}
                 type="video/mp4"
@@ -174,7 +232,7 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
               src={`http://localhost:8080/${skill.imageUrl}`}
               alt="Skill"
               className="cursor-pointer"
-              style={{ maxWidth: "60%", height: "auto" }}
+              style={{ maxWidth: "30%", height: "auto" }}
               onClick={handleImagePreview}
             />
           )}
@@ -184,10 +242,8 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
         <div className="flex justify-between items-center mt-4">
           {/* Like Button */}
           <div
-            className={`flex items-center cursor-pointer ${
-              userLiked ? "text-blue-500" : "text-gray-500"
-            }`}
-            onClick={handleLike}
+            className={`flex items-center cursor-pointer`}
+            onClick={fetchLikedUsers}
           >
             <FaThumbsUp className="mr-2 text-2xl" />
             <span>{likes}</span>
@@ -195,10 +251,8 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
 
           {/* Comment Button */}
           <div
-            className={`flex items-center cursor-pointer ${
-              userCommented ? "text-blue-500" : "text-gray-500"
-            }`}
-            onClick={handleComment}
+            className={`flex items-center cursor-pointer `}
+            onClick={openCommentModal}
           >
             <FaComment className="mr-2 text-2xl" />
             <span>{comments}</span>
@@ -289,6 +343,63 @@ const MySkillingSharingCard = ({ skill, onDelete }) => {
                 onClick={handleEditSubmit}
               >
                 Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Adding Comment */}
+      {isCommentModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+          onClick={closeCommentModal}
+        >
+          <div
+            className="bg-white p-6 rounded shadow-lg w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Comments:</h3>
+              <ul className="space-y-2 max-h-60 overflow-y-auto">
+                {commentList.map((comment, index) => (
+                  <li
+                    key={index}
+                    className="border border-gray-200 p-2 rounded"
+                  >
+                    <p className="text-sm text-gray-700">
+                      <div className="flex items-center mb-2 gap-4">
+                        <div className="font-semibold text-lg text-gray-800">
+                          {comment.user?.profilePic ? (
+                            <img
+                              src={`http://localhost:8080/${comment.user.profilePic}`}
+                              alt="Profile"
+                              className="w-12 h-12 rounded-full object-cover border"
+                            />
+                          ) : (
+                            <FaUserCircle className="text-gray-400 text-3xl" />
+                          )}
+                        </div>
+                        <strong>
+                          {comment.user?.username || "Anonymous"}:
+                        </strong>{" "}
+                      </div>
+                      {comment.text}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex justify-end mt-2">
+              <button
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2"
+                onClick={closeCommentModal}
+              >
+                Close
               </button>
             </div>
           </div>

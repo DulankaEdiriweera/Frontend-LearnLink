@@ -99,6 +99,7 @@ const SkillSharingFeed = () => {
   //get all skills
   const [skills, setSkills] = useState([]);
   const email = localStorage.getItem("email");
+  const id = localStorage.getItem("id");
 
   useEffect(() => {
     // Fetch the skills from the backend
@@ -134,6 +135,7 @@ const SkillSharingFeed = () => {
 // Optional: If you also have user ID and username saved
 const currentUser = {
   email: email,
+  id:id
 };
 
 
