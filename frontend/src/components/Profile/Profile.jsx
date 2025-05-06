@@ -8,6 +8,8 @@ import MySkillSharingPosts from "../SkillSharingPosts/MySkillSharingPosts.jsx";
 import { useEffect } from "react";
 import axios from "axios";
 import MyLearningProgressPosts from './../LearningProgressPost/MyLearningProgressPosts';
+import MyLearningPlanPosts from './../LearningPlanSharing/MyLearningPlanPosts.jsx'
+
 
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
