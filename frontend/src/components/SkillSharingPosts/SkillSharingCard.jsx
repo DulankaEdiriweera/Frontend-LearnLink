@@ -146,6 +146,52 @@ const SkillSharingCard = ({ skill, currentUser }) => {
     }
   };
 
+  //Follow
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && skill.user) {
+      // Fetch follow status from the backend or set it based on existing data
+      const fetchFollowStatus = async () => {
+        try {
+          const response = await axios.get(
+            `http://localhost:8080/api/users/${currentUser.id}/follow-status/${skill.user.id}`
+          );
+          setIsFollowing(response.data.isFollowing);
+        } catch (error) {
+          console.error("Failed to fetch follow status", error);
+        }
+      };
+
+      fetchFollowStatus();
+    }
+  }, [currentUser, skill.user]);
+
+  const handleFollow = async () => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/api/users/${currentUser.id}/follow/${skill.user.id}`,
+        {}
+      );
+      setIsFollowing(true); // Update the follow status
+      Swal.fire("Success", "You are now following this user.", "success");
+    } catch (error) {
+      Swal.fire("Error", "Failed to follow the user.", "error");
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:8080/api/users/${currentUser.id}/unfollow/${skill.user.id}`
+      );
+      setIsFollowing(false); // Update the follow status
+      Swal.fire("Success", "You have unfollowed this user.", "success");
+    } catch (error) {
+      Swal.fire("Error", "Failed to unfollow the user.", "error");
+    }
+  };
+
   return (
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
       {/* Post Owner */}
@@ -165,8 +211,11 @@ const SkillSharingCard = ({ skill, currentUser }) => {
           {skill.user ? skill.user.username : "Unknown User"}
         </div>
         <div className="font-semibold">
-          <button className="w-full p-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-all duration-300">
-            Follow
+          <button
+            onClick={isFollowing ? handleUnfollow : handleFollow}
+            className="w-full p-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-all duration-300"
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
           </button>
         </div>
       </div>

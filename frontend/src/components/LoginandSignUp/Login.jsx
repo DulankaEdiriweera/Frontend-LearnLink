@@ -28,11 +28,12 @@ const Login = () => {
       );
 
       // On success, store the JWT token (you can use localStorage or context)
-      const { token, username, email: userEmail } = response.data;
+      const { token, username, email: userEmail,id } = response.data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("username", username);
       localStorage.setItem("email", userEmail);
+      localStorage.setItem("id", id);
 
       Swal.fire({
         icon: "success",
