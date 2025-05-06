@@ -126,11 +126,10 @@ const UserProfile = () => {
                 <button
                   key={item}
                   onClick={() => handleTabChange(item)}
-                  className={`pb-2 capitalize ${
-                    tab === item
-                      ? "border-b-2 border-blue-600 text-blue-600 font-semibold"
-                      : "text-gray-500"
-                  }`}
+                  className={`pb-2 capitalize ${tab === item
+                    ? "border-b-2 border-blue-600 text-blue-600 font-semibold"
+                    : "text-gray-500"
+                    }`}
                 >
                   {item.replace(/([A-Z])/g, " $1")}
                 </button>
@@ -144,11 +143,11 @@ const UserProfile = () => {
                   <MySkillSharingPosts />
                 </div>
               )}
-              {tab === "learningPlan" && <div>Learning Plan Content</div>}
+              {tab === "learningPlan" && <div><MyLearningPlanPosts /></div>}
               {tab === "goalTracking" && <div>Goal Tracking Content</div>}
               {tab === "learningProgress" && (
                 <div>
-                  <MyLearningProgressPosts/>
+                  <MyLearningProgressPosts />
                 </div>
               )}
             </div>
