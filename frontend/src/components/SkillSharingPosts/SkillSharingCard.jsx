@@ -164,6 +164,11 @@ const SkillSharingCard = ({ skill, currentUser }) => {
         <div className="font-semibold text-lg text-gray-800">
           {skill.user ? skill.user.username : "Unknown User"}
         </div>
+        <div className="font-semibold">
+          <button className="w-full p-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-all duration-300">
+            Follow
+          </button>
+        </div>
       </div>
 
       {/* Post Title */}
@@ -175,7 +180,7 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       {/* Post Image or Video */}
       <div className="mt-4">
         {skill.imageUrl && skill.imageUrl.endsWith(".mp4") ? (
-          <video controls width="70%" height="auto">
+          <video controls width="30%" height="auto">
             <source
               src={`http://localhost:8080/${skill.imageUrl}`}
               type="video/mp4"
@@ -187,7 +192,7 @@ const SkillSharingCard = ({ skill, currentUser }) => {
             src={`http://localhost:8080/${skill.imageUrl}`}
             alt="Skill"
             className="cursor-pointer"
-            style={{ maxWidth: "70%", height: "auto" }}
+            style={{ maxWidth: "30%", height: "auto" }}
             onClick={handleImagePreview}
           />
         )}
