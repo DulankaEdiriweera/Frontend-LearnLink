@@ -69,10 +69,17 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       Swal.fire({
         title: `<div style="font-size: 24px;">👍 Liked by</div>`,
         html: `<div style="text-align: left;">
-                ${res.data
-                  .map((u) => `<p>${u.username} (${u.email})</p>`)
-                  .join("")}
-              </div>`,
+                        ${res.data
+                          .map(
+                            (u) => `
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <img src="http://localhost:8080/${u.profilePic}" alt="${u.username}" class="w-8 h-8 rounded-full object-cover" />
+                            <p>${u.username} (${u.email})</p>
+                          </div>
+                        `
+                          )
+                          .join("")}
+                      </div>`,
         icon: "info",
       });
     } catch (err) {
