@@ -5,6 +5,7 @@ import { MdBusinessCenter, MdSchool } from "react-icons/md";
 import profileBackground from "../../assets/profilebackground.png";
 import Navigation from "../Navigation/Navigation.jsx";
 import MySkillSharingPosts from "../SkillSharingPosts/MySkillSharingPosts.jsx";
+import MyLearningProgressPosts from "../LearningProgressPost/MyLearningProgressPosts.jsx";
 
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
@@ -120,7 +121,7 @@ const UserProfile = () => {
             {tab === "mySkillSharingPosts" && <div><MySkillSharingPosts/></div>}
             {tab === "learningPlan" && <div>Learning Plan Content</div>}
             {tab === "goalTracking" && <div>Goal Tracking Content</div>}
-            {tab === "learningProgress" && <div>Learning Progress Content</div>}
+            {tab === "learningProgress" && <div><MyLearningProgressPosts/></div>}
           </div>
         </div>
       </div>

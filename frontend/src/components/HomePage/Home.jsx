@@ -306,7 +306,7 @@ const Home = () => {
               {/* Arrow Link to Other Pages */}
               <div className="mt-6">
                 <button
-                  onClick={() => (window.location.href = "/")}
+                  onClick={() => (window.location.href = "/learningProgressFeed")}
                   className="flex items-center bg-blue-900 text-white text-xl font-semibold rounded-3xl p-3"
                   disabled={!isLoggedIn}
                 >

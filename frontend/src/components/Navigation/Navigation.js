@@ -32,7 +32,8 @@ export const navigation =[
     },
     {
         title:"Share Progress Updates",
-        icon : <GiProgression />
+        icon : <GiProgression />,
+        path : '/learningProgressFeed'
 
     },
     {
