@@ -4,6 +4,7 @@ import { MdDeleteForever } from "react-icons/md";
 import { MdEdit } from "react-icons/md";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { FaUserCircle } from "react-icons/fa";
 
 const MySkillingSharingCard = ({ skill, onDelete, currentUser }) => {
   // State to keep track of like and comment counts
@@ -180,9 +181,22 @@ const MySkillingSharingCard = ({ skill, onDelete, currentUser }) => {
     <div>
       <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-2 w-full">
-          <div className="font-semibold text-lg text-gray-800">
-            {skill.user ? skill.user.username : "Unknown User"}
-          </div>
+          <div className="flex items-center mb-2 gap-4">
+                  <div className="font-semibold text-lg text-gray-800">
+                    {skill.user?.profilePic ? (
+                      <img
+                        src={`http://localhost:8080/${skill.user.profilePic}`}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <FaUserCircle className="text-gray-400 text-3xl" />
+                    )}
+                  </div>
+                  <div className="font-semibold text-lg text-gray-800">
+                    {skill.user ? skill.user.username : "Unknown User"}
+                  </div>
+                </div>
 
           <div className="flex space-x-4 text-2xl ml-auto">
             <div className="cursor-pointer text-blue-600 flex items-center">
