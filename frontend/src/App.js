@@ -9,6 +9,7 @@ import LearningPlanFeed from './components/LearningPlanSharing/LearningPlanShari
 import Profile from './components/Profile/Profile';
 import EditProfile from './components/Profile/EditProfile';
 import LearningProgressFeed from './components/LearningProgressPost/LearningProgressFeed';
+import PlanNotifications from './components/LearningPlanSharing/PlanNotification';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path='/signup' element={<SignUp/>}/>
         <Route path='/profile' element={<Profile/>}/>
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path='/planNotification' element={<PlanNotifications/>}/>
       </Routes>
     </div>
   );

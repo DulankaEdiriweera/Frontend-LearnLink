@@ -176,6 +176,8 @@ const LearningPlanFeed = () => {
             }, 500);
         }
     };
+    const email = localStorage.getItem("email");
+    const id = localStorage.getItem("id");
 
     const fetchLearningPlans = async () => {
         if (!token) {
@@ -211,7 +213,11 @@ const LearningPlanFeed = () => {
         setLoading(true);
         fetchLearningPlans();
     }, [token]);
-
+    // Optional: If you also have user ID and username saved
+    const currentUser = {
+        email: email,
+        id: id
+    };
     return (
         <div className="flex">
             <div className="w-1/6">
@@ -369,7 +375,7 @@ const LearningPlanFeed = () => {
                 <div className="pt-10 px-5">
                     {learningPlans.length > 0 ? (
                         [...learningPlans].map((learningPlan) => (
-                            <LearningPlanSharingCard key={learningPlan.id} learningPlan={learningPlan} />
+                            <LearningPlanSharingCard key={learningPlan.id} learningPlan={learningPlan} currentUser={currentUser} />
                         ))
                     ) : !loading ? (
                         <div className="text-center py-10 text-gray-500">
