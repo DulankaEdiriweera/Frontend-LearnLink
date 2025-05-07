@@ -9,7 +9,8 @@ import LearningPlanFeed from './components/LearningPlanSharing/LearningPlanShari
 import GoalTrackingFeed from './components/GoalTracking/GoalTrackingFeed';
 import Profile from './components/Profile/Profile';
 import EditProfile from './components/Profile/EditProfile';
-
+import LearningProgressFeed from './components/LearningProgressPost/LearningProgressFeed';
+import Notifications from './components/Notifications/Notification.jsx';
 
 function App() {
   return (
@@ -18,11 +19,12 @@ function App() {
         <Route path='/' element={<Home/>}/>
         <Route path='/skillSharingFeed' element={<SkillSharingFeed/>}/>
         <Route path='/learningPlanSharingFeed' element={<LearningPlanFeed/>}/>
-        <Route path='/GoalTrackingFeed' element={<GoalTrackingFeed/>}/>
+        <Route path='/learningProgressFeed' element={<LearningProgressFeed/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/signup' element={<SignUp/>}/>
         <Route path='/profile' element={<Profile/>}/>
         <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path='/Notification' element={<Notifications/>}/>
       </Routes>
     </div>
   );
