@@ -69,10 +69,17 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       Swal.fire({
         title: `<div style="font-size: 24px;">👍 Liked by</div>`,
         html: `<div style="text-align: left;">
-                ${res.data
-                  .map((u) => `<p>${u.username} (${u.email})</p>`)
-                  .join("")}
-              </div>`,
+                        ${res.data
+                          .map(
+                            (u) => `
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <img src="http://localhost:8080/${u.profilePic}" alt="${u.username}" class="w-8 h-8 rounded-full object-cover" />
+                            <p>${u.username} (${u.email})</p>
+                          </div>
+                        `
+                          )
+                          .join("")}
+                      </div>`,
         icon: "info",
       });
     } catch (err) {
@@ -210,6 +217,11 @@ const SkillSharingCard = ({ skill, currentUser }) => {
         <div className="font-semibold text-lg text-gray-800">
           {skill.user ? skill.user.username : "Unknown User"}
         </div>
+        <div className="flex items-center space-x-1 text-xs text-gray-500">
+          <p>Posted on</p>
+          <p>{new Date(skill.createdAt).toLocaleString()}</p>
+        </div>
+
         <div className="font-semibold">
           <button
             onClick={isFollowing ? handleUnfollow : handleFollow}
