@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+// Import icons for edit and delete
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const MyGoalTrackingCard = ({ goal, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -11,6 +13,16 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
   const [file, setFile] = useState(null);
 
   const token = localStorage.getItem("token");
+
+  // Update form data when entering edit mode to ensure latest data
+  useEffect(() => {
+    if (isEditing) {
+      setTitle(goal.title);
+      setDescription(goal.description);
+      setStartDate(goal.startDate);
+      setDueDate(goal.dueDate);
+    }
+  }, [isEditing, goal]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -73,9 +85,27 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
+    <div className="bg-white shadow-lg rounded-lg p-4 mb-4 relative">
       {!isEditing ? (
         <>
+          {/* Action Icons in upper right corner */}
+          <div className="absolute top-2 right-2 flex gap-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-yellow-500 hover:text-yellow-600 p-1"
+              title="Edit"
+            >
+              <FaEdit size={18} />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="text-red-500 hover:text-red-600 p-1"
+              title="Delete"
+            >
+              <FaTrash size={18} />
+            </button>
+          </div>
+
           {/* Goal Owner */}
           <div className="flex items-center mb-2">
             <div className="font-semibold text-lg text-gray-800">
@@ -99,32 +129,16 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
             </div>
           </div>
 
-          {/* Goal Image */}
+          {/* Goal Image with reduced size */}
           {goal.imageUrl && (
             <div className="mt-4">
               <img
                 src={`http://localhost:8080/${goal.imageUrl}`}
                 alt="Goal Preview"
-                className="w-full h-auto rounded"
+                className="w-1/2 h-auto rounded mx-auto"
               />
             </div>
           )}
-
-          {/* Action Buttons */}
-          <div className="mt-4 flex gap-4">
-            <button
-              onClick={() => setIsEditing(true)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded"
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-            >
-              Delete
-            </button>
-          </div>
         </>
       ) : (
         // Edit Form
@@ -180,14 +194,14 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
             />
           </div>
 
-          {/* Preview Existing Image */}
+          {/* Preview Existing Image with reduced size */}
           {goal.imageUrl && (
             <div className="mt-4">
               <label className="block text-sm font-semibold mb-1">Current Image:</label>
               <img
                 src={`http://localhost:8080/${goal.imageUrl}`}
                 alt="Current Goal"
-                className="w-full h-auto rounded"
+                className="w-1/2 h-auto rounded mx-auto"
               />
             </div>
           )}
