@@ -39,7 +39,7 @@ export const navigation =[
     {
         title:"Notifications",
         icon : <IoIosNotifications />,
-         path : '/planNotification'
+         path : '/Notification'
 
     },
     {

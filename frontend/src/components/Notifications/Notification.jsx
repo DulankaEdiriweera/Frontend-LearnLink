@@ -3,9 +3,8 @@ import axios from "axios";
 import { formatDistanceToNow } from "date-fns";
 import { FaThumbsUp, FaComment } from "react-icons/fa";
 import Navigation from "../Navigation/Navigation.jsx";
-import LearningPlanSharingRightPart from "./LearningPlanSharingRightPart.jsx";
-
-const PlanNotification = () => {
+//import LearningPlanSharingRightPart from "./LearningPlanSharingRightPart.jsx";
+const Notification = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -244,10 +243,10 @@ const PlanNotification = () => {
 
             {/* Fixed Right Sidebar */}
             <div className="w-1/6 h-full fixed top-0 right-0 bg-white border-l">
-                <LearningPlanSharingRightPart />
+
             </div>
         </div>
     );
 };
 
-export default PlanNotification;
+export default Notification;

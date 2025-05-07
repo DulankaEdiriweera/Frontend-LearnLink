@@ -1,5 +1,4 @@
 import React from "react";
-import { CiSearch } from "react-icons/ci";
 import PLAN from "../../assets/PLAN.mp4"; // Correct import statement
 
 const LearningPlanSharingRightPart = () => {
