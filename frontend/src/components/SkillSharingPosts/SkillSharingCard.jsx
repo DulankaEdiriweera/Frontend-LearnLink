@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaThumbsUp, FaComment, FaCommentAlt } from "react-icons/fa";
-import { FaUserCircle } from "react-icons/fa";
+import { FaUserCircle, FaEdit, FaTrash } from "react-icons/fa";
+import { MdEdit } from "react-icons/md";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -69,10 +70,17 @@ const SkillSharingCard = ({ skill, currentUser }) => {
       Swal.fire({
         title: `<div style="font-size: 24px;">👍 Liked by</div>`,
         html: `<div style="text-align: left;">
-                ${res.data
-                  .map((u) => `<p>${u.username} (${u.email})</p>`)
-                  .join("")}
-              </div>`,
+                        ${res.data
+                          .map(
+                            (u) => `
+                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <img src="http://localhost:8080/${u.profilePic}" alt="${u.username}" class="w-8 h-8 rounded-full object-cover" />
+                            <p>${u.username} (${u.email})</p>
+                          </div>
+                        `
+                          )
+                          .join("")}
+                      </div>`,
         icon: "info",
       });
     } catch (err) {
@@ -192,6 +200,66 @@ const SkillSharingCard = ({ skill, currentUser }) => {
     }
   };
 
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+
+  const startEditing = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditingText(comment.text);
+  };
+
+  const handleUpdateComment = async () => {
+    if (!editingText.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:8080/api/skills/comments/${editingCommentId}`,
+        { text: editingText },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      Swal.fire("Success", "Comment updated", "success");
+      setEditingCommentId(null);
+      setEditingText("");
+      fetchComments(); // refresh comment list
+    } catch (error) {
+      // Check if the error is an AxiosError and if the backend sent a message
+      const errorMessage =
+        error.response?.data?.message || "Failed to update comment";
+      Swal.fire("Error", errorMessage, "error");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `http://localhost:8080/api/skills/comments/${commentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      Swal.fire("Deleted!", "Your comment has been deleted.", "success");
+      fetchComments(); // Refresh comment list
+    } catch (error) {
+      console.error(error);
+      Swal.fire(
+        "Error",
+        error.response?.data?.message || "Failed to delete comment",
+        "error"
+      );
+    }
+  };
+
+  //console.log(currentUser.id); // Check if
+
   return (
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4">
       {/* Post Owner */}
@@ -210,6 +278,11 @@ const SkillSharingCard = ({ skill, currentUser }) => {
         <div className="font-semibold text-lg text-gray-800">
           {skill.user ? skill.user.username : "Unknown User"}
         </div>
+        <div className="flex items-center space-x-1 text-xs text-gray-500">
+          <p>Posted on</p>
+          <p>{new Date(skill.createdAt).toLocaleString()}</p>
+        </div>
+
         <div className="font-semibold">
           <button
             onClick={isFollowing ? handleUnfollow : handleFollow}
@@ -314,14 +387,51 @@ const SkillSharingCard = ({ skill, currentUser }) => {
             className="bg-white p-6 rounded shadow-lg w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold mb-4">Add a Comment</h2>
-            <textarea
-              className="w-full border border-gray-300 rounded p-2 mb-4"
-              rows={4}
-              placeholder="Type your comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
+            {editingCommentId ? (
+              <h2 className="text-xl font-bold mb-4">Edit the Comment</h2>
+            ) : (
+              <h2 className="text-xl font-bold mb-4">Add a Comment</h2>
+            )}
+
+            {/* If editing, show the comment editor, otherwise show the textarea to add a new comment */}
+            {editingCommentId ? (
+              <>
+                <textarea
+                  className="w-full border p-2 rounded mb-2"
+                  rows={2}
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <button
+                    className="bg-blue-500 text-white px-2 py-1 rounded"
+                    onClick={handleUpdateComment} // Handle update
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="bg-gray-300 text-black px-2 py-1 rounded"
+                    onClick={() => {
+                      setEditingCommentId(null);
+                      setEditingText("");
+                    }} // Cancel editing
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <textarea
+                  className="w-full border border-gray-300 rounded p-2 mb-4"
+                  rows={4}
+                  placeholder="Type your comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+              </>
+            )}
+
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Comments:</h3>
               <ul className="space-y-2 max-h-60 overflow-y-auto">
@@ -330,7 +440,7 @@ const SkillSharingCard = ({ skill, currentUser }) => {
                     key={index}
                     className="border border-gray-200 p-2 rounded"
                   >
-                    <p className="text-sm text-gray-700">
+                    <div className="text-sm text-gray-700">
                       <div className="flex items-center mb-2 gap-4">
                         <div className="font-semibold text-lg text-gray-800">
                           {comment.user?.profilePic ? (
@@ -345,10 +455,61 @@ const SkillSharingCard = ({ skill, currentUser }) => {
                         </div>
                         <strong>
                           {comment.user?.username || "Anonymous"}:
-                        </strong>{" "}
+                        </strong>
                       </div>
-                      {comment.text}
-                    </p>
+                      <div className="flex gap-5">
+                        {editingCommentId === comment.id ? (
+                          <div>
+                            {/* Comment being edited */}
+                            <textarea
+                              className="w-full border p-2 rounded mb-2"
+                              rows={2}
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                            />
+                            <button
+                              className="bg-blue-500 text-white px-2 py-1 rounded"
+                              onClick={handleUpdateComment} // Save comment update
+                            >
+                              Save
+                            </button>
+                          </div>
+                        ) : (
+                          <p>{comment.text}</p>
+                        )}
+
+                        {/* Show edit icon only for the logged-in user's comments */}
+
+                        {comment.user?.id == currentUser.id && (
+                          <div className="flex gap-2">
+                            <MdEdit
+                              className="text-blue-500 cursor-pointer hover:text-blue-700"
+                              onClick={() => startEditing(comment)}
+                              title="Edit Comment"
+                            />
+                            <FaTrash
+                              className="text-red-500 cursor-pointer hover:text-red-700"
+                              onClick={() =>
+                                Swal.fire({
+                                  title: "Are you sure?",
+                                  text: "You won't be able to revert this!",
+                                  icon: "warning",
+                                  showCancelButton: true,
+                                  confirmButtonColor: "#d33",
+                                  cancelButtonColor: "#3085d6",
+                                  confirmButtonText: "Yes, delete it!",
+                                }).then((result) => {
+                                  if (result.isConfirmed) {
+                                    handleDeleteComment(comment.id);
+                                  }
+                                })
+                              }
+                              title="Delete Comment"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <p className="text-xs text-gray-500">
                       {new Date(comment.createdAt).toLocaleString()}
                     </p>
@@ -364,12 +525,14 @@ const SkillSharingCard = ({ skill, currentUser }) => {
               >
                 Cancel
               </button>
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={handleCommentSubmit}
-              >
-                Comment
-              </button>
+              {!editingCommentId && (
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  onClick={handleCommentSubmit} // Submit new comment
+                >
+                  Comment
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
+    // State to keep track of like and comment counts
     const [likes, setLikes] = useState(learningPlan.likedUsers?.length || 0);
     const [comments, setComments] = useState(0);
     const [userLiked, setUserLiked] = useState(false);
@@ -13,6 +14,15 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
     const [newComment, setNewComment] = useState("");
     const [commentList, setCommentList] = useState([]);
     const [likedUsers, setLikedUsers] = useState([]);
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [editingText, setEditingText] = useState("");
+    const [isFollowing, setIsFollowing] = useState(false);
+
+    // API base URL - centralized for easier maintenance
+    const API_BASE_URL = "http://localhost:8080/api";
+
+    // Get auth token
+    const getAuthToken = () => localStorage.getItem("token");
 
     useEffect(() => {
         if (learningPlan.likedUsers && currentUser) {
@@ -22,13 +32,55 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
         fetchComments();
     }, [learningPlan.likedUsers, learningPlan.comments, currentUser]);
 
+    useEffect(() => {
+        if (currentUser && learningPlan.user) {
+            // Fetch follow status from the backend
+            const fetchFollowStatus = async () => {
+                try {
+                    const response = await axios.get(
+                        `${API_BASE_URL}/users/${currentUser.id}/follow-status/${learningPlan.user.id}`,
+                        {
+                            headers: { Authorization: `Bearer ${getAuthToken()}` }
+                        }
+                    );
+                    setIsFollowing(response.data.isFollowing);
+                } catch (error) {
+                    console.error("Failed to fetch follow status", error);
+                }
+            };
+
+            fetchFollowStatus();
+        }
+    }, [currentUser, learningPlan.user]);
+
+    useEffect(() => {
+        if (learningPlan.createdAt) {
+            const parsedDate = new Date(learningPlan.createdAt);
+            if (!isNaN(parsedDate.getTime())) {
+                setTimeDisplay(getRelativeTime(parsedDate));
+            } else {
+                console.warn("Invalid createdAt:", learningPlan.createdAt);
+            }
+        }
+        const intervalId = setInterval(() => {
+            if (learningPlan.createdAt) {
+                const parsedDate = new Date(learningPlan.createdAt);
+                if (!isNaN(parsedDate.getTime())) {
+                    setTimeDisplay(getRelativeTime(parsedDate));
+                }
+            }
+        }, 60000); // update every minute
+
+        return () => clearInterval(intervalId);
+    }, [learningPlan.createdAt]);
+
     const handleLike = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = getAuthToken();
 
             // Make the request to like or unlike
             const res = await axios.put(
-                `http://localhost:8080/api/learning-plans/${learningPlan.id}/like`,
+                `${API_BASE_URL}/learning-plans/${learningPlan.id}/like`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -56,6 +108,7 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
                 });
             }
         } catch (error) {
+            console.error("Like error:", error);
             Swal.fire("Error", "Failed to update like", "error");
         }
     };
@@ -63,7 +116,10 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
     const fetchLikedUsers = async () => {
         try {
             const res = await axios.get(
-                `http://localhost:8080/api/learning-plans/${learningPlan.id}/liked-users`
+                `${API_BASE_URL}/learning-plans/${learningPlan.id}/liked-users`,
+                {
+                    headers: { Authorization: `Bearer ${getAuthToken()}` }
+                }
             );
             setLikedUsers(res.data);
             Swal.fire({
@@ -71,7 +127,7 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
                 html: `<div style="text-align: left;">
                         ${res.data.map((u) => `
                           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                            <img src="http://localhost:8080/${u.profilePic}" alt="${u.username}" class="w-8 h-8 rounded-full object-cover" />
+                            <img src="${API_BASE_URL.replace('/api', '')}/${u.profilePic}" alt="${u.username}" class="w-8 h-8 rounded-full object-cover" />
                             <p>${u.username} (${u.email})</p>
                           </div>
                         `).join("")}
@@ -81,14 +137,19 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
                 confirmButtonColor: '#4CAF50'
             });
         } catch (err) {
+            console.error("Fetch liked users error:", err);
             Swal.fire("Error", "Failed to load liked users", "error");
         }
     };
 
     const fetchComments = async () => {
         try {
+            const token = getAuthToken();
             const res = await axios.get(
-                `http://localhost:8080/api/learning-plans/${learningPlan.id}/comments`
+                `${API_BASE_URL}/learning-plans/${learningPlan.id}/comments`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
             );
             setCommentList(res.data);
 
@@ -107,9 +168,9 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
         if (!newComment.trim()) return;
 
         try {
-            const token = localStorage.getItem("token");
+            const token = getAuthToken();
             await axios.post(
-                `http://localhost:8080/api/learning-plans/${learningPlan.id}/comments`,
+                `${API_BASE_URL}/learning-plans/${learningPlan.id}/comments`,
                 { text: newComment },
                 {
                     headers: {
@@ -120,10 +181,181 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
             );
             setNewComment("");
             setIsCommentModalOpen(false);
-            fetchComments();
-            Swal.fire("Success", "Comment added", "success");
+            await fetchComments();
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Comment added successfully!",
+                showConfirmButton: false,
+                timer: 1500
+            });
         } catch (err) {
+            console.error("Comment submission error:", err);
             Swal.fire("Error", "Failed to submit comment", "error");
+        }
+    };
+
+    const startEditing = (comment) => {
+        setEditingCommentId(comment.id);
+        setEditingText(comment.text);
+    };
+
+    const handleUpdateComment = async () => {
+        if (!editingText.trim()) return;
+
+        try {
+            const token = getAuthToken();
+
+            // Debug log
+            console.log("Updating comment:", {
+                commentId: editingCommentId,
+                text: editingText,
+                token: token ? "Present" : "Missing"
+            });
+
+            const response = await axios.put(
+                `${API_BASE_URL}/learning-plans/comments/${editingCommentId}`,
+                { text: editingText },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            console.log("Update comment response:", response.data);
+
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Comment updated successfully!",
+                showConfirmButton: false,
+                timer: 1500
+            });
+
+            setEditingCommentId(null);
+            setEditingText("");
+            await fetchComments(); // refresh comment list
+        } catch (error) {
+            console.error("Update comment error:", error);
+
+            // Detailed error logging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                console.error("Error status:", error.response.status);
+            }
+
+            // Check if the error is an AxiosError and if the backend sent a message
+            const errorMessage =
+                error.response?.data?.message || "Failed to update comment";
+            Swal.fire("Error", errorMessage, "error");
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        try {
+            // Ask for confirmation before deleting
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const token = getAuthToken();
+
+            console.log("Deleting comment:", {
+                commentId: commentId,
+                token: token ? "Present" : "Missing"
+            });
+
+            await axios.delete(
+                `${API_BASE_URL}/learning-plans/comments/${commentId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            Swal.fire({
+                icon: "success",
+                title: "Deleted!",
+                text: "Your comment has been deleted.",
+                showConfirmButton: false,
+                timer: 1500
+            });
+
+            await fetchComments(); // Refresh comment list
+        } catch (error) {
+            console.error("Delete comment error:", error);
+
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                console.error("Error status:", error.response.status);
+            }
+
+            Swal.fire(
+                "Error",
+                error.response?.data?.message || "Failed to delete comment",
+                "error"
+            );
+        }
+    };
+
+    const handleFollow = async () => {
+        try {
+            const token = getAuthToken();
+            const response = await axios.post(
+                `${API_BASE_URL}/users/${currentUser.id}/follow/${learningPlan.user.id}`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+            setIsFollowing(true);
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "You are now following this user!",
+                showConfirmButton: false,
+                timer: 1500
+            });
+        } catch (error) {
+            console.error("Follow error:", error);
+            Swal.fire("Error", "Failed to follow the user.", "error");
+        }
+    };
+
+    const handleUnfollow = async () => {
+        try {
+            const token = getAuthToken();
+            const response = await axios.delete(
+                `${API_BASE_URL}/users/${currentUser.id}/unfollow/${learningPlan.user.id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+            setIsFollowing(false);
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "You have unfollowed this user.",
+                showConfirmButton: false,
+                timer: 1500
+            });
+        } catch (error) {
+            console.error("Unfollow error:", error);
+            Swal.fire("Error", "Failed to unfollow the user.", "error");
         }
     };
 
@@ -145,14 +377,6 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
         return `${days} day${days > 1 ? "s" : ""} ago`;
     };
 
-    useEffect(() => {
-        setTimeDisplay(getRelativeTime(learningPlan.createdAt));
-        const intervalId = setInterval(() => {
-            setTimeDisplay(getRelativeTime(learningPlan.createdAt));
-        }, 1000);
-        return () => clearInterval(intervalId);
-    }, [learningPlan.createdAt]);
-
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6 w-full max-w-xl mx-auto">
             <div className="flex items-center mb-4">
@@ -171,6 +395,26 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
                 <div>
                     <p className="font-semibold text-gray-800">{learningPlan.user?.username || "Unknown User"}</p>
                     <p className="text-xs text-gray-500">{timeDisplay}</p>
+                </div>
+                <div className="font-semibold ml-auto">
+                    {/* Check if the current user is the owner */}
+                    {String(learningPlan.user?.id) !== String(currentUser.id) ? (
+                        <button
+                            onClick={isFollowing ? handleUnfollow : handleFollow}
+                            className="w-full p-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-all duration-300"
+                        >
+                            {isFollowing ? "Unfollow" : "Follow"}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => {
+                                window.location.href = `/profile`;
+                            }}
+                            className="w-full p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
+                        >
+                            View Profile
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -251,9 +495,9 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
                         {/* Comment List */}
                         <div className="max-h-64 overflow-y-auto space-y-4">
                             {commentList.length > 0 ? (
-                                commentList.map((comment, index) => (
+                                commentList.map((comment) => (
                                     <div
-                                        key={index}
+                                        key={comment.id}
                                         className="flex gap-3 items-start bg-gray-50 p-4 rounded-xl shadow-sm"
                                     >
                                         {comment.user?.profilePic ? (
@@ -274,7 +518,55 @@ const LearningPlanSharingCard = ({ learningPlan, currentUser }) => {
                                                     {getRelativeTime(comment.createdAt)}
                                                 </p>
                                             </div>
-                                            <p className="text-sm text-gray-700 mt-1">{comment.text}</p>
+
+                                            {/* Comment editing input */}
+                                            {editingCommentId === comment.id ? (
+                                                <div className="mt-2">
+                                                    <textarea
+                                                        value={editingText}
+                                                        onChange={(e) => setEditingText(e.target.value)}
+                                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                        rows={2}
+                                                    />
+                                                    <div className="flex gap-2 mt-2 text-sm">
+                                                        <button
+                                                            onClick={handleUpdateComment}
+                                                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingCommentId(null);
+                                                                setEditingText("");
+                                                            }}
+                                                            className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-700 mt-1">{comment.text}</p>
+                                            )}
+
+                                            {/* Action buttons for the comment owner */}
+                                            {comment.user?.email === currentUser.email && editingCommentId !== comment.id && (
+                                                <div className="flex gap-3 text-xs text-blue-600 mt-2">
+                                                    <button
+                                                        onClick={() => startEditing(comment)}
+                                                        className="hover:underline"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteComment(comment.id)}
+                                                        className="text-red-600 hover:underline"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))

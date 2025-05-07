@@ -7,9 +7,8 @@ import Navigation from "../Navigation/Navigation.jsx";
 import MySkillSharingPosts from "../SkillSharingPosts/MySkillSharingPosts.jsx";
 import { useEffect } from "react";
 import axios from "axios";
-import MyLearningProgressPosts from './../LearningProgressPost/MyLearningProgressPosts';
-import MyLearningPlanPosts from './../LearningPlanSharing/MyLearningPlanPosts.jsx'
-
+import MyLearningProgressPosts from "./../LearningProgressPost/MyLearningProgressPosts";
+import MyLearningPlanPosts from "./../LearningPlanSharing/MyLearningPlanPosts.jsx";
 
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
@@ -34,6 +33,35 @@ const UserProfile = () => {
       } catch (error) {
         console.error("Failed to fetch user data:", error);
         // Optionally handle unauthorized state or redirect to login
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  //followers and followings
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token"); 
+      try {
+        const response = await axios.get("http://localhost:8080/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUser(response.data);
+
+        // Fetch follow counts
+        const countsRes = await axios.get(
+          `http://localhost:8080/api/users/${response.data.id}/follow-counts`
+        );
+        setFollowerCount(countsRes.data.followers);
+        setFollowingCount(countsRes.data.following);
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
       }
     };
 
@@ -108,11 +136,10 @@ const UserProfile = () => {
             {/* Followers & Following */}
             <div className="mt-4 flex space-x-8 font-semibold text-gray-700">
               <span>
-                {user.followers}{" "}
-                <span className="text-gray-500">Followers</span>
+                {followerCount} <span className="text-gray-500">Followers</span>
               </span>
               <span>
-                {user.following}{" "}
+                {followingCount}{" "}
                 <span className="text-gray-500">Following</span>
               </span>
             </div>
@@ -128,10 +155,11 @@ const UserProfile = () => {
                 <button
                   key={item}
                   onClick={() => handleTabChange(item)}
-                  className={`pb-2 capitalize ${tab === item
-                    ? "border-b-2 border-blue-600 text-blue-600 font-semibold"
-                    : "text-gray-500"
-                    }`}
+                  className={`pb-2 capitalize ${
+                    tab === item
+                      ? "border-b-2 border-blue-600 text-blue-600 font-semibold"
+                      : "text-gray-500"
+                  }`}
                 >
                   {item.replace(/([A-Z])/g, " $1")}
                 </button>
@@ -145,7 +173,11 @@ const UserProfile = () => {
                   <MySkillSharingPosts />
                 </div>
               )}
-              {tab === "learningPlan" && <div><MyLearningPlanPosts /></div>}
+              {tab === "learningPlan" && (
+                <div>
+                  <MyLearningPlanPosts />
+                </div>
+              )}
               {tab === "goalTracking" && <div>Goal Tracking Content</div>}
               {tab === "learningProgress" && (
                 <div>
