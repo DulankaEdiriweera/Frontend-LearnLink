@@ -6,8 +6,10 @@ import SkillSharingFeed from './components/SkillSharingPosts/SkillSharingFeed';
 import Login from './components/LoginandSignUp/Login';
 import SignUp from './components/LoginandSignUp/SignUp';
 import LearningPlanFeed from './components/LearningPlanSharing/LearningPlanSharingFeed';
+import GoalTrackingFeed from './components/GoalTracking/GoalTrackingFeed';
 import Profile from './components/Profile/Profile';
 import EditProfile from './components/Profile/EditProfile';
+
 
 function App() {
   return (
@@ -16,6 +18,7 @@ function App() {
         <Route path='/' element={<Home/>}/>
         <Route path='/skillSharingFeed' element={<SkillSharingFeed/>}/>
         <Route path='/learningPlanSharingFeed' element={<LearningPlanFeed/>}/>
+        <Route path='/GoalTrackingFeed' element={<GoalTrackingFeed/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/signup' element={<SignUp/>}/>
         <Route path='/profile' element={<Profile/>}/>
