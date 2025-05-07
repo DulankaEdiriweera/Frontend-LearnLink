@@ -6,6 +6,7 @@ import SkillSharingFeed from './components/SkillSharingPosts/SkillSharingFeed';
 import Login from './components/LoginandSignUp/Login';
 import SignUp from './components/LoginandSignUp/SignUp';
 import LearningPlanFeed from './components/LearningPlanSharing/LearningPlanSharingFeed';
+import GoalTrackingFeed from './components/GoalTracking/GoalTrackingFeed';
 import Profile from './components/Profile/Profile';
 import EditProfile from './components/Profile/EditProfile';
 import LearningProgressFeed from './components/LearningProgressPost/LearningProgressFeed';
@@ -24,6 +25,7 @@ function App() {
         <Route path='/profile' element={<Profile/>}/>
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path='/Notification' element={<Notifications/>}/>
+        <Route path='/goalTrackingFeed' element={<GoalTrackingFeed/>}/>
       </Routes>
     </div>
   );
