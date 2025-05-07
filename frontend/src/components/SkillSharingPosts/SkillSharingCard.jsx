@@ -387,7 +387,11 @@ const SkillSharingCard = ({ skill, currentUser }) => {
             className="bg-white p-6 rounded shadow-lg w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold mb-4">Add a Comment</h2>
+            {editingCommentId ? (
+              <h2 className="text-xl font-bold mb-4">Edit the Comment</h2>
+            ) : (
+              <h2 className="text-xl font-bold mb-4">Add a Comment</h2>
+            )}
 
             {/* If editing, show the comment editor, otherwise show the textarea to add a new comment */}
             {editingCommentId ? (
