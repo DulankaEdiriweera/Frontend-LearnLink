@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import axios from "axios";
 import MyLearningProgressPosts from "./../LearningProgressPost/MyLearningProgressPosts";
 import MyLearningPlanPosts from "./../LearningPlanSharing/MyLearningPlanPosts.jsx";
+import MyGoalTrackingPost from "./../GoalTracking/MyGoalTrakingPosts.jsx";
 
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
@@ -178,7 +179,7 @@ const UserProfile = () => {
                   <MyLearningPlanPosts />
                 </div>
               )}
-              {tab === "goalTracking" && <div>Goal Tracking Content</div>}
+              {tab === "goalTracking" && <div><MyGoalTrackingPost/></div>}
               {tab === "learningProgress" && (
                 <div>
                   <MyLearningProgressPosts />

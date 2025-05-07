@@ -25,6 +25,7 @@ function App() {
         <Route path='/profile' element={<Profile/>}/>
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path='/Notification' element={<Notifications/>}/>
+        <Route path='/goalTrackingFeed' element={<GoalTrackingFeed/>}/>
       </Routes>
     </div>
   );
