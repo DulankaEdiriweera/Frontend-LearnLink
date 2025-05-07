@@ -22,7 +22,7 @@ export const navigation =[
     {
         title:"Share Learning Plans",
         icon : <SiFuturelearn />,
-        path : '/learningPlanSharing'
+        path : '/learningPlanSharingFeed'
 
     },
     {
@@ -32,17 +32,20 @@ export const navigation =[
     },
     {
         title:"Share Progress Updates",
-        icon : <GiProgression />
+        icon : <GiProgression />,
+        path : '/learningProgressFeed'
 
     },
     {
         title:"Notifications",
-        icon : <IoIosNotifications />
+        icon : <IoIosNotifications />,
+         path : '/Notification'
 
     },
     {
         title:"Profile",
-        icon : <CgProfile />
+        icon : <CgProfile />,
+        path : '/profile'
 
     },
 ]

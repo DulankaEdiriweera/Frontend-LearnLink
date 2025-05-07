@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
+import Swal from "sweetalert2";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -26,19 +28,27 @@ const Login = () => {
       );
 
       // On success, store the JWT token (you can use localStorage or context)
-      const { token, username, email: userEmail } = response.data;
+      const { token, username, email: userEmail,id } = response.data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("username", username);
       localStorage.setItem("email", userEmail);
+      localStorage.setItem("id", id);
 
-      setMessage("Login successful!");
-
-      // Redirect to a different page after successful login (e.g., dashboard)
-      navigate("/");
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+  
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
-      console.log(error);
-      setMessage(error.response?.data || "Login failed");
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: error.response?.data || "Something went wrong. Please try again.",
+      });
     } finally {
       setIsLoading(false); // Stop loading
     }
