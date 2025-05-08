@@ -14,7 +14,6 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
 
   const token = localStorage.getItem("token");
 
-  // Update form data when entering edit mode to ensure latest data
   useEffect(() => {
     if (isEditing) {
       setTitle(goal.title);
@@ -58,7 +57,6 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
   };
 
   const handleDelete = async () => {
-    // Show confirmation dialog before deleting
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -76,7 +74,7 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
           },
         });
         Swal.fire("Deleted!", "Your goal has been deleted.", "success");
-        onDelete(goal.id); // Call onDelete callback to remove the goal from the UI
+        onDelete(goal.id);
       } catch (error) {
         console.error("Delete failed", error);
         Swal.fire("Error", "Failed to delete goal", "error");
@@ -88,7 +86,6 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
     <div className="bg-white shadow-lg rounded-lg p-4 mb-4 relative">
       {!isEditing ? (
         <>
-          {/* Action Icons in upper right corner */}
           <div className="absolute top-2 right-2 flex gap-2">
             <button
               onClick={() => setIsEditing(true)}
@@ -106,20 +103,16 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
             </button>
           </div>
 
-          {/* Goal Owner */}
           <div className="flex items-center mb-2">
             <div className="font-semibold text-lg text-gray-800">
               {goal.user?.email}
             </div>
           </div>
 
-          {/* Goal Title */}
           <div className="text-xl font-semibold mb-2">{goal.title}</div>
 
-          {/* Goal Description */}
           <p className="text-gray-700">{goal.description}</p>
 
-          {/* Goal Dates */}
           <div className="flex justify-between text-sm text-gray-500 mt-2">
             <div>
               <span className="font-semibold">Start Date:</span> {goal.startDate}
@@ -129,8 +122,7 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
             </div>
           </div>
 
-          {/* Goal Image with reduced size */}
-          {goal.imageUrl && (
+          {goal.imageUrl && typeof goal.imageUrl === "string" && (
             <div className="mt-4">
               <img
                 src={`http://localhost:8080/${goal.imageUrl}`}
@@ -141,7 +133,6 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
           )}
         </>
       ) : (
-        // Edit Form
         <form onSubmit={handleUpdate}>
           <div className="mb-2">
             <label className="block text-sm font-semibold">Title:</label>
@@ -194,8 +185,7 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
             />
           </div>
 
-          {/* Preview Existing Image with reduced size */}
-          {goal.imageUrl && (
+          {goal.imageUrl && typeof goal.imageUrl === "string" && (
             <div className="mt-4">
               <label className="block text-sm font-semibold mb-1">Current Image:</label>
               <img
@@ -206,7 +196,6 @@ const MyGoalTrackingCard = ({ goal, onDelete }) => {
             </div>
           )}
 
-          {/* Form Buttons */}
           <div className="flex gap-4 mt-4">
             <button
               type="submit"
