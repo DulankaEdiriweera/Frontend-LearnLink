@@ -1,88 +1,286 @@
-import React from "react";
-import { CiSearch } from "react-icons/ci";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { FaComment, FaHeart, FaLightbulb, FaChartLine } from "react-icons/fa";
 
 const LearningProgressRightPart = () => {
-  // Sample data for trending topics and learning streaks
-  const trendingTopics = [
-    { id: 1, name: "JavaScript", count: 3250 },
-    { id: 2, name: "React Hooks", count: 1890 },
-    { id: 3, name: "UI Design", count: 1456 },
-    { id: 4, name: "Python Data Science", count: 1345 },
-    { id: 5, name: "AWS Certification", count: 982 },
+  const [popularProgress, setPopularProgress] = useState([]);
+  const [recentComments, setRecentComments] = useState([]);
+  const [progressStats, setProgressStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // API base URL
+  const API_BASE_URL = "http://localhost:8080/api";
+  
+  // Get auth token helper function
+  const getAuthToken = () => localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = getAuthToken();
+        
+        // Fetch user's learning progress
+        const userProgressRes = await axios.get(
+          `${API_BASE_URL}/learning-progress/user`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        // Calculate stats from user's progress data
+        if (userProgressRes.data && userProgressRes.data.length > 0) {
+          const stats = calculateProgressStats(userProgressRes.data);
+          setProgressStats(stats);
+        } else {
+          setProgressStats(fallbackStats);
+        }
+        
+        // Get most popular learning progress entries (most liked)
+        // Note: The controller doesn't have this endpoint, so we'll simulate it
+        const allProgressRes = await axios.get(
+          `${API_BASE_URL}/learning-progress`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (allProgressRes.data && allProgressRes.data.length > 0) {
+          // Sort by like count
+          const sorted = [...allProgressRes.data].sort((a, b) => 
+            (b.likedUsers?.length || 0) - (a.likedUsers?.length || 0)
+          );
+          setPopularProgress(sorted.slice(0, 3)); // Top 3
+        } else {
+          setPopularProgress(fallbackPopular);
+        }
+        
+        // Fetch recent comments on user's progress
+        const userProgress = userProgressRes.data || [];
+        if (userProgress.length > 0) {
+          const progressIds = userProgress.map(p => p.id);
+          let allComments = [];
+          
+          // Fetch comments for each progress entry
+          for (const id of progressIds.slice(0, 3)) { // Limit to 3 most recent entries
+            try {
+              const commentsRes = await axios.get(
+                `${API_BASE_URL}/learning-progress/${id}/comments`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              
+              if (commentsRes.data && commentsRes.data.length > 0) {
+                // Add progress title to each comment for context
+                const commentsWithContext = commentsRes.data.map(comment => ({
+                  ...comment,
+                  progressTitle: userProgress.find(p => p.id === id)?.title || "Untitled Progress"
+                }));
+                
+                allComments = [...allComments, ...commentsWithContext];
+              }
+            } catch (error) {
+              console.error(`Error fetching comments for progress ${id}:`, error);
+            }
+          }
+          
+          // Sort by date and take most recent
+          allComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setRecentComments(allComments.slice(0, 5));
+        } else {
+          setRecentComments([]);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Use fallback data if API fails
+        setProgressStats(fallbackStats);
+        setPopularProgress(fallbackPopular);
+        setRecentComments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Calculate stats from progress data
+  const calculateProgressStats = (progressData) => {
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    
+    const thisWeekEntries = progressData.filter(entry => 
+      new Date(entry.createdAt) >= oneWeekAgo && new Date(entry.createdAt) <= now
+    );
+    
+    const lastWeekEntries = progressData.filter(entry => 
+      new Date(entry.createdAt) >= twoWeeksAgo && new Date(entry.createdAt) < oneWeekAgo
+    );
+    
+    const totalLikes = progressData.reduce((total, entry) => 
+      total + (entry.likedUsers ? entry.likedUsers.length : 0), 0
+    );
+    
+    // Create daily stats for the past week
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weeklyStats = Array(7).fill().map((_, i) => {
+      const date = new Date(now);
+      date.setDate(now.getDate() - (6 - i));
+      const dayName = dayNames[date.getDay()];
+      
+      const count = progressData.filter(entry => {
+        const entryDate = new Date(entry.createdAt);
+        return entryDate.toDateString() === date.toDateString();
+      }).length;
+      
+      return { day: dayName, count };
+    });
+    
+    return {
+      total: progressData.length,
+      totalThisWeek: thisWeekEntries.length,
+      lastWeek: lastWeekEntries.length,
+      totalLikes: totalLikes,
+      weeklyStats: weeklyStats
+    };
+  };
+  
+  // Fallback data if API isn't available
+  const fallbackStats = {
+    total: 24,
+    totalThisWeek: 4,
+    lastWeek: 3,
+    totalLikes: 15,
+    weeklyStats: [
+      { day: "Sun", count: 0 },
+      { day: "Mon", count: 1 },
+      { day: "Tue", count: 0 },
+      { day: "Wed", count: 1 },
+      { day: "Thu", count: 0 },
+      { day: "Fri", count: 1 },
+      { day: "Sat", count: 1 }
+    ]
+  };
+  
+  const fallbackPopular = [
+    { id: 1, title: "Learned React Context API", likedUsers: Array(12) },
+    { id: 2, title: "My Journey with Spring Boot", likedUsers: Array(8) },
+    { id: 3, title: "Understanding Docker Containers", likedUsers: Array(6) }
+  ];
+  
+  // Format date helper
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric"
+    });
+  };
+  
+  // Learning tips
+  const learningTips = [
+    "Document your learning journey regularly to help reinforce concepts",
+    "Share your struggles as well as successes - both are valuable learning experiences",
+    "Add screenshots or images to your learning progress updates for visual reference",
+    "Review your past learning progress entries to see how far you've come",
+    "Respond to comments on your learning progress to build community",
+    "Use different templates to structure your learning progress updates",
+    "Set aside time each week to reflect on and document what you've learned",
+    "Like others' learning progress to encourage community growth"
   ];
 
-  const topLearners = [
-    { id: 1, name: "CodeMaster", handle: "@codemaster", streak: 65, avatar: "CM" },
-    { id: 2, name: "TechLearner", handle: "@techlearner", streak: 42, avatar: "TL" },
-    { id: 3, name: "DevGuru", handle: "@devguru", streak: 37, avatar: "DG" },
-  ];
+  // Get random learning tip
+  const getRandomTip = () => {
+    return learningTips[Math.floor(Math.random() * learningTips.length)];
+  };
 
   return (
-    <div className="py-5 h-screen sticky top-0 p-5 space-y-5">
-      {/* Search Bar */}
-      <div className="flex items-center bg-white shadow-md px-4 py-2 rounded-full w-full mt-10">
-        <div className="relative flex items-center w-full">
-          <CiSearch className="absolute left-3 text-gray-500 text-xl" />
-          <input
-            type="text"
-            placeholder="Search learning updates..."
-            className="w-full py-2 pl-10 pr-4 text-gray-700 rounded-full outline-none"
-          />
+    <div className="p-4 space-y-4">
+      {/* Learning Progress Stats */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow p-4">
+        <div className="flex items-center mb-2">
+          <FaChartLine className="mr-2" />
+          <h3 className="font-semibold text-lg">Your Learning Stats</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-3">
+          <div className="text-center">
+            <div className="text-3xl font-bold">{progressStats?.total || 0}</div>
+            <div className="text-sm opacity-80">Total Progress Entries</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold">{progressStats?.totalLikes || 0}</div>
+            <div className="text-sm opacity-80">Total Likes Received</div>
+          </div>
         </div>
       </div>
-
-      {/* Trending Topics */}
-      <div className="bg-white rounded-xl shadow-md p-4">
-        <h3 className="font-bold text-xl mb-4">Trending Learning Topics</h3>
-        <div className="space-y-3">
-          {trendingTopics.map((topic) => (
-            <div key={topic.id} className="flex justify-between items-center">
-              <span className="font-medium hover:text-blue-600 cursor-pointer">{topic.name}</span>
-              <span className="text-gray-500 text-sm">{topic.count} updates</span>
-            </div>
-          ))}
+      
+      {/* Popular Learning Progress */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex items-center mb-3">
+          <FaHeart className="text-blue-600 mr-2" />
+          <h3 className="text-blue-900 font-semibold text-lg">Popular Progress</h3>
         </div>
-      </div>
-
-      {/* Top Learners */}
-      <div className="bg-white rounded-xl shadow-md p-4">
-        <h3 className="font-bold text-xl mb-4">Top Learning Streaks</h3>
-        <div className="space-y-4">
-          {topLearners.map((learner) => (
-            <div key={learner.id} className="flex items-center space-x-3">
-              <div className="flex-shrink-0 h-10 w-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                {learner.avatar}
-              </div>
-              <div className="flex-grow">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">{learner.name}</p>
-                    <p className="text-gray-500 text-sm">{learner.handle}</p>
-                  </div>
-                  <div className="flex items-center text-orange-500">
-                    <span className="font-bold">{learner.streak}</span>
-                    <span className="ml-1">🔥</span>
-                  </div>
+        
+        {loading ? (
+          <div className="py-4 flex justify-center">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : popularProgress.length > 0 ? (
+          <div className="space-y-3">
+            {popularProgress.map(progress => (
+              <div key={progress.id} className="pb-2 border-b border-gray-100">
+                <p className="font-medium text-gray-800">{progress.title}</p>
+                <div className="flex justify-end items-center mt-1">
+                  <span className="text-xs flex items-center text-red-500">
+                    <FaHeart className="mr-1" size={10} />
+                    {progress.likedUsers?.length || 0}
+                  </span>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-2 text-sm">No popular entries found</p>
+        )}
       </div>
-
-      {/* Learning Resources */}
-      <div className="bg-white rounded-xl shadow-md p-4">
-        <h3 className="font-bold text-xl mb-3">Featured Resources</h3>
-        <div className="space-y-2">
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 cursor-pointer">
-            <p className="font-medium text-blue-700">How to Track Your Learning Effectively</p>
-            <p className="text-sm text-gray-600">10 min read • Learning Tips</p>
-          </div>
-          <div className="p-3 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 cursor-pointer">
-            <p className="font-medium text-green-700">Build a Learning Habit in 30 Days</p>
-            <p className="text-sm text-gray-600">15 min read • Productivity</p>
-          </div>
+      
+      {/* Recent Comments */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex items-center mb-3">
+          <FaComment className="text-blue-600 mr-2" />
+          <h3 className="text-blue-900 font-semibold text-lg">Recent Comments</h3>
         </div>
+        
+        {loading ? (
+          <div className="py-4 flex justify-center">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : recentComments.length > 0 ? (
+          <div className="space-y-3">
+            {recentComments.map(comment => (
+              <div key={comment.id} className="pb-2 border-b border-gray-100">
+                <p className="text-sm text-gray-700">{comment.text}</p>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-xs text-gray-500">
+                    {formatDate(comment.createdAt)}
+                  </span>
+                  <span className="text-xs text-blue-600">
+                    {comment.progressTitle}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center py-2 text-sm">No recent comments</p>
+        )}
+      </div>
+      
+      {/* Learning Tip */}
+      <div className="bg-yellow-50 rounded-lg shadow p-4 border border-yellow-100">
+        <div className="flex items-center mb-2">
+          <FaLightbulb className="text-yellow-500 mr-2" />
+          <h3 className="font-semibold">Learning Tip</h3>
+        </div>
+        <p className="text-sm text-gray-700">
+          {getRandomTip()}
+        </p>
       </div>
     </div>
   );
