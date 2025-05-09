@@ -10,6 +10,7 @@ import axios from "axios";
 import MyLearningProgressPosts from "./../LearningProgressPost/MyLearningProgressPosts";
 import MyLearningPlanPosts from "./../LearningPlanSharing/MyLearningPlanPosts.jsx";
 import MyGoalTrackingPost from "./../GoalTracking/MyGoalTrakingPosts.jsx";
+import StoryManager from "../Story/StoryManager.jsx";
 
 const UserProfile = () => {
   const [tab, setTab] = useState("mySkillSharingPosts");
@@ -152,6 +153,7 @@ const UserProfile = () => {
                 "learningPlan",
                 "goalTracking",
                 "learningProgress",
+                "stories",
               ].map((item) => (
                 <button
                   key={item}
@@ -183,6 +185,11 @@ const UserProfile = () => {
               {tab === "learningProgress" && (
                 <div>
                   <MyLearningProgressPosts />
+                </div>
+              )}
+              {tab === "stories" && (
+                <div>
+                  <StoryManager />
                 </div>
               )}
             </div>

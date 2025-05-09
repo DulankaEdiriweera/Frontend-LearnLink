@@ -27,7 +27,8 @@ export const navigation =[
     },
     {
         title:"Goal Tracking",
-        icon : <GoGoal />
+        icon : <GoGoal />,
+        path : '/goalTrackingFeed'
 
     },
     {
